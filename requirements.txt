@@ -1,0 +1,9 @@
+fastapi
+aiohttp
+bs4
+pillow
+numpy
+motor
+dnspython
+lyricsgenius
+feedparser
