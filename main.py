@@ -6,6 +6,7 @@ from utils.logo import generate_logo
 from utils.lyrics import get_lyrics
 from utils.nyaa import Nyaasi
 from utils.ud import get_urbandict
+from utils.db import DB
 from fastapi.responses import RedirectResponse, FileResponse
 
 from utils.extra import download
@@ -25,20 +26,41 @@ async def home():
 
 
 @app.get("/wall/search")
-async def search_wall(query: str, page: int = 1, max: int = 10):
+async def search_wall(api_key: str, query: str, page: int = 1, max: int = 10):
     """Search wallpapers on wallpaperflare.com
 
+    - api_key: Your api key
     - query: Search query
-    - page: Page number (default: 1)"""
+    - page: Page number (default: 1)
+
+    Price: 2 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": "False", "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 2)
+    except Exception as e:
+        return {"success": "False", "error": str(e)}
+
     data = await WallFlare.search(query, page, max)
     return data
 
 
 @app.get("/wall/download")
-async def download_wall(id: str):
+async def download_wall(api_key: str, id: str):
     """Get download link of wallpaper from wallpaperflare.com
 
-    - id : Get from /wall/search"""
+    - id : Get from /wall/search
+
+    Price: 1 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": "False", "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 1)
+    except Exception as e:
+        return {"success": "False", "error": str(e)}
+
     data = await WallFlare.download_link(id)
     return data
 
@@ -47,10 +69,20 @@ async def download_wall(id: str):
 
 
 @app.get("/unsplash/search")
-async def search_unsplash(query: str, max: int = 10):
+async def search_unsplash(api_key: str, query: str, max: int = 10):
     """Search images on unsplash.com
 
-    - query: Search query"""
+    - query: Search query
+
+    Price: 2 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": "False", "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 2)
+    except Exception as e:
+        return {"success": "False", "error": str(e)}
+
     data = await Unsplash.search(query, max)
     return data
 
@@ -60,6 +92,7 @@ async def search_unsplash(query: str, max: int = 10):
 
 @app.get("/logo")
 async def search_unsplash(
+    api_key: str,
     text: str,
     img: str | None = None,
     bg: Literal["wallflare", "unsplash"] = "wallflare",
@@ -70,7 +103,17 @@ async def search_unsplash(
     - text: Text to be displayed on logo
     - img: Direct url of image to be used as background
     - bg: Get background from - wallflare or unsplash (default: wallflare)
-    - square: True to make square logos (default: False)"""
+    - square: True to make square logos (default: False)
+
+    Price: 3 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": "False", "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 3)
+    except Exception as e:
+        return {"success": "False", "error": str(e)}
+
     if img:
         try:
             img = await download(img)
@@ -85,10 +128,20 @@ async def search_unsplash(
 
 
 @app.get("/lyrics/search")
-async def search_lyrics(query: str):
+async def search_lyrics(api_key: str, query: str):
     """Search lyrics of songs
 
-    - query: Search query"""
+    - query: Search query
+
+    Price: 1 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": "False", "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 1)
+    except Exception as e:
+        return {"success": "False", "error": str(e)}
+
     data = await get_lyrics(query)
     return data
 
@@ -97,18 +150,38 @@ async def search_lyrics(query: str):
 
 
 @app.get("/nyaasi/latest")
-async def nyaasi_latest(max: int = 10):
+async def nyaasi_latest(api_key: str, max: int = 10):
     """Get latest uploads from nyaasi
 
-    - max: Max posts to get"""
+    - max: Max posts to get
+
+    Price: 1 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": "False", "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 1)
+    except Exception as e:
+        return {"success": "False", "error": str(e)}
+
     data = await Nyaasi.get_nyaa_latest()
     return data
 
 
 @app.get("/nyaasi/info")
-async def nyaasi_info(code: int):
-    """Get info of a file from nyaasi"""
-    data = await Nyaasi.get_nyaa_info(code)
+async def nyaasi_info(api_key: str, id: int):
+    """Get info of a file from nyaasi
+
+    Price: 1 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": "False", "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 1)
+    except Exception as e:
+        return {"success": "False", "error": str(e)}
+
+    data = await Nyaasi.get_nyaa_info(id)
     return data
 
 
@@ -116,10 +189,20 @@ async def nyaasi_info(code: int):
 
 
 @app.get("/ud/search")
-async def search_ud(query: str, max: int = 10):
+async def search_ud(api_key: str, query: str, max: int = 10):
     """Search meanings of words on Urban Dictionary
 
     - query: Word whose meaning you want
-    - max: Max definitions to get"""
+    - max: Max definitions to get
+
+    Price: 1 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": "False", "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 1)
+    except Exception as e:
+        return {"success": "False", "error": str(e)}
+
     data = await get_urbandict(query, max)
     return data
