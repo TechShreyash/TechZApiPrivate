@@ -18,7 +18,7 @@ app = FastAPI()
 async def home():
     return {
         "status": "TechZBots - Api working fine...",
-        "docs": "https://techzbots-api.herokuapp.com/docs",
+        "documentation": "/docs",
     }
 
 
