@@ -8,3 +8,4 @@ dnspython
 lyricsgenius
 feedparser
 uvicorn
+gunicorn
