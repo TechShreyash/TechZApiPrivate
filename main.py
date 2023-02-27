@@ -105,12 +105,12 @@ async def search_unsplash(
     - bg: Get background from - wallflare or unsplash (default: wallflare)
     - square: True to make square logos (default: False)
 
-    Price: 3 credits"""
+    Price: 5 credits"""
     if not await DB.is_user(api_key):
         return {"success": "False", "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 3)
+        await DB.reduce_credits(api_key, 5)
     except Exception as e:
         return {"success": "False", "error": str(e)}
 

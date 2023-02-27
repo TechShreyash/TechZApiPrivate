@@ -23,4 +23,6 @@ class DB:
         user = await DB.get_user(api_key)
         if user["credits"] < amount:
             raise Exception("Not enough credits")
-        await userdb.update_one({"api_key": api_key}, {"$inc": {"credits": -amount}})
+        await userdb.update_one(
+            {"api_key": api_key}, {"$inc": {"credits": -amount, "used": amount}}
+        )

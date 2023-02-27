@@ -7,3 +7,4 @@ motor
 dnspython
 lyricsgenius
 feedparser
+uvicorn

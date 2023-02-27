@@ -1,0 +1,1 @@
+pip install --no-cache-dir -U pip && ls && pip install --no-cache-dir -U -r requirements.txt && uvicorn main:app --reload
