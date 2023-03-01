@@ -1,12 +1,11 @@
 import aiohttp
 
 
-async def get_urbandict(word, max=10):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(
-            f"http://api.urbandictionary.com/v0/define?term={word}"
-        ) as r:
-            r = await r.json()
+async def get_urbandict(session, word, max=10):
+    async with session.get(
+        f"http://api.urbandictionary.com/v0/define?term={word}"
+    ) as r:
+        r = await r.json()
 
     z = []
     for x in r["list"]:

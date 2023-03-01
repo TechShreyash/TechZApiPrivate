@@ -13,4 +13,4 @@ y.verbose = False
 
 async def get_lyrics(query: str):
     x = y.search_song(query, get_full_info=False)
-    return {"success": "True", "results": x.lyrics}
+    return {"success": True, "results": x.lyrics}

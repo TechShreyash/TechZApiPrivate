@@ -26,20 +26,20 @@ search = [
 ]
 
 
-async def get_image(bg):
+async def get_image(session, bg):
     if bg == "unsplash":
         # getting image from unsplash
         word = random.choice(search)
-        image_url = await Unsplash.search(word)
+        image_url = await Unsplash(session).search(word)
         image_url = random.choice(image_url["results"])
-        image_file = await download(image_url, f=True)
+        image_file = await download(session, image_url, f=True)
         return image_file
     elif bg == "wallflare":
-        img = await WallFlare.home()
+        img = await WallFlare(session).home()
         img = random.choice(img["results"])
-        image_url = (await WallFlare.download_link(img["id"]))["url"]
+        image_url = (await WallFlare(session).download_link(img["id"]))["url"]
         print(image_url)
-        image_file = await download(image_url)
+        image_file = await download(session, image_url)
         return image_file
 
 
@@ -102,6 +102,7 @@ def find_font_size(text, font, image, target_width_ratio):
 
 
 async def generate_logo(
+    session,
     text: str,
     img: Optional[str] = None,
     bg: Optional[str] = None,
@@ -109,7 +110,7 @@ async def generate_logo(
 ):
     text = text.upper()
     if not img:
-        image_file = await get_image(bg)
+        image_file = await get_image(session, bg)
     else:
         image_file = img
 

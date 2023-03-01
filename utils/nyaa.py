@@ -6,8 +6,11 @@ from bs4 import BeautifulSoup as bs
 
 
 class Nyaasi:
-    async def get_nyaa_info(code):
-        r = aiohttp.ClientSession()
+    def __init__(self, session):
+        self.session = session
+
+    async def get_nyaa_info(self, code):
+        r = self.session
         x = await r.get(f"https://nyaa.si/view/{code}")
         x = (await x.text()).replace("\t", "").replace("\n", "")
         s = bs(x, "html.parser")
@@ -46,14 +49,13 @@ class Nyaasi:
             results[f"{a[0]}"] = a[1].strip()
         results["magnet"] = link
         json["results"] = results
-        await r.close()
         return json
 
     async def get_nyaa_latest(max=10):
         data = feedparser.parse("https://nyaa.si/?page=rss")
         data = data.entries[:max]
         json = {}
-        json["success"] = "True"
+        json["success"] = True
         result = []
 
         for i in data:

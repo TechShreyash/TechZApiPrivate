@@ -9,3 +9,5 @@ lyricsgenius
 feedparser
 uvicorn
 gunicorn
+yarl
+pycryptodome
