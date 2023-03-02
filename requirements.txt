@@ -10,4 +10,4 @@ feedparser
 uvicorn
 gunicorn
 yarl
-pycryptodome
+pycryptodomex
