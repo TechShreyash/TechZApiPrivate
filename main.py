@@ -10,28 +10,49 @@ from utils.nyaa import Nyaasi
 from utils.ud import get_urbandict
 from utils.db import DB
 from fastapi.responses import RedirectResponse, FileResponse
-
+from fastapi.openapi.utils import get_openapi
 from utils.extra import download
 import aiohttp
+import json
+import random
 
 app = FastAPI()
 
-session = None
+session = []
+
+
+def get_session():
+    session.sort(key=lambda i: i[1])
+    ses = session[0]
+    for i in session:
+        if i == ses:
+            session[session.index(i)][1] += 1
+
+    return ses[0]
 
 
 @app.on_event("startup")
 async def startup_event():
+    app.openapi_schema = get_openapi(
+        title="TechZApi",
+        version="1.2",
+        description="Use powerfull api features provided by TechZBots",
+        routes=app.routes,
+    )
+
     print("Creating Aiohttp Session")
     global session
-    session = aiohttp.ClientSession()
+    for i in range(3):
+        session.append([aiohttp.ClientSession(), 0])
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    await session.close()
+    for i in session:
+        await (i[0]).close()
 
 
-@app.get("/")
+@app.get("/", name="home", tags=["Home"])
 async def home():
     return {
         "status": "TechZBots - Api working fine...",
@@ -42,7 +63,7 @@ async def home():
 # Wallpaperflare.com
 
 
-@app.get("/wall/search")
+@app.get("/wall/search", name="search wallflare", tags=["Wallpapers / Images"])
 async def search_wall(api_key: str, query: str, page: int = 1, max: int = 10):
     """Search wallpapers on wallpaperflare.com
 
@@ -59,11 +80,11 @@ async def search_wall(api_key: str, query: str, page: int = 1, max: int = 10):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await WallFlare(session).search(query, page, max)
+    data = await WallFlare(get_session()).search(query, page, max)
     return data
 
 
-@app.get("/wall/download")
+@app.get("/wall/download", name="download wallflare", tags=["Wallpapers / Images"])
 async def download_wall(api_key: str, id: str):
     """Get download link of wallpaper from wallpaperflare.com
 
@@ -78,14 +99,14 @@ async def download_wall(api_key: str, id: str):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await WallFlare(session).download_link(id)
+    data = await WallFlare(get_session()).download_link(id)
     return data
 
 
 # Unsplash.com
 
 
-@app.get("/unsplash/search")
+@app.get("/unsplash/search", name="search unsplash", tags=["Wallpapers / Images"])
 async def search_unsplash(api_key: str, query: str, max: int = 10):
     """Search images on unsplash.com
 
@@ -100,14 +121,14 @@ async def search_unsplash(api_key: str, query: str, max: int = 10):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await Unsplash(session).search(query, max)
+    data = await Unsplash(get_session()).search(query, max)
     return data
 
 
 # Logo Maker
 
 
-@app.get("/logo")
+@app.get("/logo", name="logo maker", tags=["Logo Maker"])
 async def logo_maker(
     api_key: str,
     text: str,
@@ -133,18 +154,18 @@ async def logo_maker(
 
     if img:
         try:
-            img = await download(session, img)
+            img = await download(get_session(), img)
         except Exception as e:
             print(e)
             return {"success": False, "error": "Invalid image url"}
-    data = await generate_logo(session, text, img, bg, square)
+    data = await generate_logo(get_session(), text, img, bg, square)
     return FileResponse(data)
 
 
 # Lyrics
 
 
-@app.get("/lyrics/search")
+@app.get("/lyrics/search", name="search lyrics", tags=["Extra"])
 async def search_lyrics(api_key: str, query: str):
     """Search lyrics of songs
 
@@ -166,7 +187,7 @@ async def search_lyrics(api_key: str, query: str):
 # nyaa.si
 
 
-@app.get("/nyaasi/latest")
+@app.get("/nyaasi/latest", name="nyaasi latest", tags=["Nyaasi"])
 async def nyaasi_latest(api_key: str, max: int = 10):
     """Get latest uploads from nyaasi
 
@@ -185,7 +206,7 @@ async def nyaasi_latest(api_key: str, max: int = 10):
     return data
 
 
-@app.get("/nyaasi/info")
+@app.get("/nyaasi/info", name="nyaasi info", tags=["Nyaasi"])
 async def nyaasi_info(api_key: str, id: int):
     """Get info of a file from nyaasi
 
@@ -198,14 +219,14 @@ async def nyaasi_info(api_key: str, id: int):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await Nyaasi(session).get_nyaa_info(id)
+    data = await Nyaasi(get_session()).get_nyaa_info(id)
     return data
 
 
 # Urban Dictionary
 
 
-@app.get("/ud/search")
+@app.get("/ud/search", name="search ud", tags=["Extra"])
 async def search_ud(api_key: str, query: str, max: int = 10):
     """Search meanings of words on Urban Dictionary
 
@@ -221,14 +242,14 @@ async def search_ud(api_key: str, query: str, max: int = 10):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await get_urbandict(session, query, max)
+    data = await get_urbandict(get_session(), query, max)
     return data
 
 
 # Gogoanime
 
 
-@app.get("/gogo/latest")
+@app.get("/gogo/latest", name="gogo latest", tags=["Gogo Anime"])
 async def gogo_latest(api_key: str, page: int = 1):
     """Get latest released animes from gogoanime
 
@@ -243,11 +264,11 @@ async def gogo_latest(api_key: str, page: int = 1):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await GoGoApi(session).latest(page)
+    data = await GoGoApi(get_session()).latest(page)
     return {"success": True, "results": data}
 
 
-@app.get("/gogo/search")
+@app.get("/gogo/search", name="gogo search", tags=["Gogo Anime"])
 async def gogo_search(api_key: str, query: str):
     """Search animes on gogoanime
 
@@ -262,11 +283,11 @@ async def gogo_search(api_key: str, query: str):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await GoGoApi(session).search(query)
+    data = await GoGoApi(get_session()).search(query)
     return {"success": True, "results": data}
 
 
-@app.get("/gogo/anime")
+@app.get("/gogo/anime", name="gogo anime", tags=["Gogo Anime"])
 async def gogo_anime(api_key: str, id: str):
     """Get anime info from gogoanime
 
@@ -281,11 +302,11 @@ async def gogo_anime(api_key: str, id: str):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await GoGoApi(session).anime(id)
+    data = await GoGoApi(get_session()).anime(id)
     return {"success": True, "results": data}
 
 
-@app.get("/gogo/episode")
+@app.get("/gogo/episode", name="gogo episode", tags=["Gogo Anime"])
 async def gogo_episode(api_key: str, id: str):
     """Get episode embed links from gogoanime
 
@@ -300,11 +321,11 @@ async def gogo_episode(api_key: str, id: str):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await GoGoApi(session).episode(id)
+    data = await GoGoApi(get_session()).episode(id)
     return {"success": True, "results": data}
 
 
-@app.get("/gogo/stream")
+@app.get("/gogo/stream", name="gogo stream", tags=["Gogo Anime"])
 async def gogo_stream(api_key: str, url: str):
     """Get episode stream links (m3u8) from gogoanime
 
@@ -319,5 +340,5 @@ async def gogo_stream(api_key: str, url: str):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await get_m3u8(session, url)
+    data = await get_m3u8(get_session(), url)
     return {"success": True, "results": data}
