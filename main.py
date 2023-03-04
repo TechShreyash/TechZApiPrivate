@@ -19,6 +19,7 @@ import random
 app = FastAPI()
 
 session = []
+AIO_SESSIONS = 1
 
 
 def get_session():
@@ -42,7 +43,7 @@ async def startup_event():
 
     print("Creating Aiohttp Session")
     global session
-    for i in range(3):
+    for i in range(AIO_SESSIONS):
         session.append([aiohttp.ClientSession(), 0])
 
 
@@ -307,21 +308,24 @@ async def gogo_anime(api_key: str, id: str):
 
 
 @app.get("/gogo/episode", name="gogo episode", tags=["Gogo Anime"])
-async def gogo_episode(api_key: str, id: str):
+async def gogo_episode(
+    api_key: str, id: str, lang: Literal["sub", "dub", "both"] = "sub"
+):
     """Get episode embed links from gogoanime
 
     - id : Episode id, Ex : horimiya-dub-episode-3
+    - lang : sub or dub or both
 
-    Price: 1 credits"""
+    Price: 2 credits for sub and dub, 3 credits for both"""
     if not await DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 1)
+        await DB.reduce_credits(api_key, 3 if lang == "both" else 2)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await GoGoApi(get_session()).episode(id)
+    data = await GoGoApi(get_session()).episode(id, lang)
     return {"success": True, "results": data}
 
 

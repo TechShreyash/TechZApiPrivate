@@ -1,11 +1,14 @@
 from bs4 import BeautifulSoup as bs
-import aiohttp
+import aiohttp, requests
 
 
 def format_url(url):
     if not url.startswith("https"):
         url = "https:" + url
     return url.replace("mixdrop.co", "mixdrop.ch").replace("dood.wf", "dood.yt")
+
+
+Gcookie = None
 
 
 class GoGoApi:
@@ -117,9 +120,20 @@ class GoGoApi:
         eps.reverse()
         return len(li), eps
 
-    async def episode(self, id):
+    async def episode(self, id, lang):
+        global Gcookie
+        if Gcookie == None:
+            Gcookie = self.get_gogo_cookie(
+                "qwertytechz123@gmail.com", "P@8eqB7@YpJz5ea"
+            )
+        auth_gogo = Gcookie
+
         data = {}
-        async with self.session.get(f"https://{self.host}/{id}") as resp:
+        data["DL"] = {}
+        
+        async with self.session.get(
+            f"https://{self.host}/{id}", cookies={"auth": auth_gogo}
+        ) as resp:
             soup = bs(await resp.read(), "html.parser")
 
         div = soup.find("div", "anime_muti_link")
@@ -131,15 +145,26 @@ class GoGoApi:
             url = format_url(url)
             embeds.append(url)
 
-        dlink = soup.find("li", "dowloads").find("a").get("href")
+        dlinks = soup.find("div", "cf-download").find_all("a")
+        dlink = {}
+        for i in dlinks:
+            x = i.text.split("x")[1].strip()
+            y = i.get("href").strip()
+            dlink[x] = y
 
         if "dub" in id:
-            data["DUB"] = embeds
-            data["DL"] = {}
-            data["DL"]["DUB"] = dlink
+            if lang == "dub" or lang == "both":
+                data["DUB"] = embeds
+                data["DL"]["DUB"] = dlink
+
+            if lang == "dub":
+                return data
+
             id = id.replace("-dub", "")
 
-            async with self.session.get(f"https://{self.host}/{id}") as resp:
+            async with self.session.get(
+                f"https://{self.host}/{id}", cookies={"auth": auth_gogo}
+            ) as resp:
                 soup = bs(await resp.read(), "html.parser")
 
             error = soup.find("h1", "entry-title")
@@ -154,23 +179,37 @@ class GoGoApi:
                 url = format_url(url)
                 embeds.append(url)
 
-            dlink = soup.find("li", "dowloads").find("a").get("href")
-            data["SUB"] = embeds
-            data["DL"]["SUB"] = dlink
+            dlinks = soup.find("div", "cf-download").find_all("a")
+            dlink = {}
+            for i in dlinks:
+                x = i.text.split("x")[1].strip()
+                y = i.get("href").strip()
+                dlink[x] = y
+
+            if lang == "sub" or lang == "both":
+                data["SUB"] = embeds
+                data["DL"]["SUB"] = dlink
             return data
 
         else:
-            data["SUB"] = embeds
-            data["DL"] = {}
-            data["DL"]["SUB"] = dlink
+            if lang == "sub" or lang == "both":
+                data["SUB"] = embeds
+                data["DL"]["SUB"] = dlink
+
+            if lang == "sub":
+                return data
+
             id = (
                 id.split("-episode-")[0]
                 + "-dub"
                 + "-episode-"
                 + id.split("-episode-")[1]
             )
+            print(id)
 
-            async with self.session.get(f"https://{self.host}/{id}") as resp:
+            async with self.session.get(
+                f"https://{self.host}/{id}", cookies={"auth": auth_gogo}
+            ) as resp:
                 soup = bs(await resp.read(), "html.parser")
             error = soup.find("h1", "entry-title")
             if error:
@@ -182,7 +221,41 @@ class GoGoApi:
                 url = i.get("data-video")
                 url = format_url(url)
                 embeds.append(url)
-            dlink = soup.find("li", "dowloads").find("a").get("href")
-            data["DUB"] = embeds
-            data["DL"]["DUB"] = dlink
+
+            dlinks = soup.find("div", "cf-download").find_all("a")
+            dlink = {}
+            for i in dlinks:
+                x = i.text.split("x")[1].strip()
+                y = i.get("href").strip()
+                dlink[x] = y
+
+            if lang == "dub" or lang == "both":
+                data["DUB"] = embeds
+                data["DL"]["DUB"] = dlink
             return data
+
+    def get_gogo_cookie(self, email, password):
+        s = requests.session()
+        animelink = "https://www1.gogoanime.bid/login.html"
+        response = s.get(animelink)
+        response_html = response.text
+        soup = bs(response_html, "html.parser")
+        source_url = soup.select('meta[name="csrf-token"]')
+        token = source_url[0].attrs["content"]
+
+        data = f"email={email}&password={password}&_csrf={token}"
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Linux; Android 9; vivo 1916) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Mobile Safari/537.36",
+            "authority": "gogo-cdn.com",
+            "referer": f"https://www1.gogoanime.bid/",
+            "content-type": "application/x-www-form-urlencoded",
+        }
+        s.headers = headers
+
+        r = s.post(animelink, data=data, headers=headers)
+
+        if r.status_code == 200:
+            s.close()
+            print("Gogoanime cookie generated successfully")
+            return s.cookies.get_dict().get("auth")
