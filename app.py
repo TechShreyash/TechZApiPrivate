@@ -133,7 +133,7 @@ async def search_unsplash(api_key: str, query: str, max: int = 10):
 async def logo_maker(
     api_key: str,
     text: str,
-    img: str | None = None,
+    img: str = None,
     bg: Literal["wallflare", "unsplash"] = "wallflare",
     square: bool = False,
 ):
