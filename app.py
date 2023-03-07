@@ -23,6 +23,7 @@ AIO_SESSIONS = 1
 
 
 def get_session():
+    print(session)
     session.sort(key=lambda i: i[1])
     ses = session[0]
     for i in session:
