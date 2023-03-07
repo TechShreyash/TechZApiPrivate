@@ -11,3 +11,4 @@ uvicorn
 gunicorn
 yarl
 pycryptodomex
+pymongo
