@@ -8,7 +8,7 @@ from utils.logo import generate_logo
 from utils.lyrics import get_lyrics
 from utils.nyaa import Nyaasi
 from utils.ud import get_urbandict
-from utils.db import DB
+from utils.sync_db import DB
 from fastapi.responses import RedirectResponse, FileResponse
 from fastapi.openapi.utils import get_openapi
 from utils.extra import download
@@ -74,11 +74,11 @@ async def search_wall(api_key: str, query: str, page: int = 1, max: int = 10):
     - page: Page number (default: 1)
 
     Price: 2 credits"""
-    if not await DB.is_user(api_key):
+    if not DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 2)
+        DB.reduce_credits(api_key, 2)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -93,11 +93,11 @@ async def download_wall(api_key: str, id: str):
     - id : Get from /wall/search
 
     Price: 1 credits"""
-    if not await DB.is_user(api_key):
+    if not DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 1)
+        DB.reduce_credits(api_key, 1)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -115,11 +115,11 @@ async def search_unsplash(api_key: str, query: str, max: int = 10):
     - query: Search query
 
     Price: 2 credits"""
-    if not await DB.is_user(api_key):
+    if not DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 2)
+        DB.reduce_credits(api_key, 2)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -146,11 +146,11 @@ async def logo_maker(
     - square: True to make square logos (default: False)
 
     Price: 5 credits"""
-    if not await DB.is_user(api_key):
+    if not DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 5)
+        DB.reduce_credits(api_key, 5)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -174,11 +174,11 @@ async def search_lyrics(api_key: str, query: str):
     - query: Search query
 
     Price: 1 credits"""
-    if not await DB.is_user(api_key):
+    if not DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 1)
+        DB.reduce_credits(api_key, 1)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -196,11 +196,11 @@ async def nyaasi_latest(api_key: str, max: int = 10):
     - max: Max posts to get
 
     Price: 1 credits"""
-    if not await DB.is_user(api_key):
+    if not DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 1)
+        DB.reduce_credits(api_key, 1)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -213,11 +213,11 @@ async def nyaasi_info(api_key: str, id: int):
     """Get info of a file from nyaasi
 
     Price: 1 credits"""
-    if not await DB.is_user(api_key):
+    if not DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 1)
+        DB.reduce_credits(api_key, 1)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -236,11 +236,11 @@ async def search_ud(api_key: str, query: str, max: int = 10):
     - max: Max definitions to get
 
     Price: 1 credits"""
-    if not await DB.is_user(api_key):
+    if not DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 1)
+        DB.reduce_credits(api_key, 1)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -258,11 +258,11 @@ async def gogo_latest(api_key: str, page: int = 1):
     - page: Page number (default: 1)
 
     Price: 1 credits"""
-    if not await DB.is_user(api_key):
+    if not DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 1)
+        DB.reduce_credits(api_key, 1)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -277,11 +277,11 @@ async def gogo_search(api_key: str, query: str):
     - query: Search query
 
     Price: 1 credits"""
-    if not await DB.is_user(api_key):
+    if not DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 1)
+        DB.reduce_credits(api_key, 1)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -296,11 +296,11 @@ async def gogo_anime(api_key: str, id: str):
     - id : Anime id, Ex : horimiya-dub
 
     Price: 1 credits"""
-    if not await DB.is_user(api_key):
+    if not DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 1)
+        DB.reduce_credits(api_key, 1)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -318,11 +318,11 @@ async def gogo_episode(
     - lang : sub or dub or both
 
     Price: 2 credits for sub and dub, 3 credits for both"""
-    if not await DB.is_user(api_key):
+    if not DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 3 if lang == "both" else 2)
+        DB.reduce_credits(api_key, 3 if lang == "both" else 2)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -337,11 +337,11 @@ async def gogo_stream(api_key: str, url: str):
     - url : Episode url, Ex : https://anihdplay.com/streaming.php?id=MTUyODYy&title=Horimiya+%28Dub%29+Episode+3
 
     Price: 2 credits"""
-    if not await DB.is_user(api_key):
+    if not DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 2)
+        DB.reduce_credits(api_key, 2)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
