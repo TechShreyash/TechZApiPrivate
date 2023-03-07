@@ -33,7 +33,7 @@ async def get_session():
         )
 
         print("Creating Aiohttp Session")
-        global session
+
         for i in range(AIO_SESSIONS):
             session.append([aiohttp.ClientSession(), 0])
 
