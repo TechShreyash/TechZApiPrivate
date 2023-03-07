@@ -22,8 +22,20 @@ session = []
 AIO_SESSIONS = 1
 
 
-def get_session():
-    print(session)
+async def get_session():
+    if len(session) == 0:
+        app.openapi_schema = get_openapi(
+            title="TechZApi",
+            version="1.2",
+            description="Use powerfull api features provided by TechZBots",
+            routes=app.routes,
+        )
+
+        print("Creating Aiohttp Session")
+        global session
+        for i in range(AIO_SESSIONS):
+            session.append([aiohttp.ClientSession(), 0])
+
     session.sort(key=lambda i: i[1])
     ses = session[0]
     for i in session:
@@ -82,7 +94,7 @@ async def search_wall(api_key: str, query: str, page: int = 1, max: int = 10):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await WallFlare(get_session()).search(query, page, max)
+    data = await WallFlare((await get_session())).search(query, page, max)
     return data
 
 
@@ -101,7 +113,7 @@ async def download_wall(api_key: str, id: str):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await WallFlare(get_session()).download_link(id)
+    data = await WallFlare((await get_session())).download_link(id)
     return data
 
 
@@ -123,7 +135,7 @@ async def search_unsplash(api_key: str, query: str, max: int = 10):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await Unsplash(get_session()).search(query, max)
+    data = await Unsplash((await get_session())).search(query, max)
     return data
 
 
@@ -156,11 +168,11 @@ async def logo_maker(
 
     if img:
         try:
-            img = await download(get_session(), img)
+            img = await download((await get_session()), img)
         except Exception as e:
             print(e)
             return {"success": False, "error": "Invalid image url"}
-    data = await generate_logo(get_session(), text, img, bg, square)
+    data = await generate_logo((await get_session()), text, img, bg, square)
     return FileResponse(data)
 
 
@@ -221,7 +233,7 @@ async def nyaasi_info(api_key: str, id: int):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await Nyaasi(get_session()).get_nyaa_info(id)
+    data = await Nyaasi((await get_session())).get_nyaa_info(id)
     return data
 
 
@@ -244,7 +256,7 @@ async def search_ud(api_key: str, query: str, max: int = 10):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await get_urbandict(get_session(), query, max)
+    data = await get_urbandict((await get_session()), query, max)
     return data
 
 
@@ -266,7 +278,7 @@ async def gogo_latest(api_key: str, page: int = 1):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await GoGoApi(get_session()).latest(page)
+    data = await GoGoApi((await get_session())).latest(page)
     return {"success": True, "results": data}
 
 
@@ -285,7 +297,7 @@ async def gogo_search(api_key: str, query: str):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await GoGoApi(get_session()).search(query)
+    data = await GoGoApi((await get_session())).search(query)
     return {"success": True, "results": data}
 
 
@@ -304,7 +316,7 @@ async def gogo_anime(api_key: str, id: str):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await GoGoApi(get_session()).anime(id)
+    data = await GoGoApi((await get_session())).anime(id)
     return {"success": True, "results": data}
 
 
@@ -326,7 +338,7 @@ async def gogo_episode(
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await GoGoApi(get_session()).episode(id, lang)
+    data = await GoGoApi((await get_session())).episode(id, lang)
     return {"success": True, "results": data}
 
 
@@ -345,5 +357,5 @@ async def gogo_stream(api_key: str, url: str):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await get_m3u8(get_session(), url)
+    data = await get_m3u8((await get_session()), url)
     return {"success": True, "results": data}
