@@ -23,6 +23,7 @@ AIO_SESSIONS = 1
 
 
 async def get_session():
+    global session
     if len(session) == 0:
         app.openapi_schema = get_openapi(
             title="TechZApi",
