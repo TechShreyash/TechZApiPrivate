@@ -144,12 +144,12 @@ async def logo_maker(
     - bg: Get background from - wallflare or unsplash (default: wallflare)
     - square: True to make square logos (default: False)
 
-    Price: 5 credits"""
+    Price: 10 credits"""
     if not await DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 5)
+        await DB.reduce_credits(api_key, 10)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -316,12 +316,12 @@ async def gogo_episode(
     - id : Episode id, Ex : horimiya-dub-episode-3
     - lang : sub or dub or both
 
-    Price: 2 credits for sub and dub, 3 credits for both"""
+    Price: 1 credits for sub and dub, 2 credits for both"""
     if not await DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 3 if lang == "both" else 2)
+        await DB.reduce_credits(api_key, 2 if lang == "both" else 1)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -335,12 +335,12 @@ async def gogo_stream(api_key: str, url: str):
 
     - url : Episode url, Ex : https://anihdplay.com/streaming.php?id=MTUyODYy&title=Horimiya+%28Dub%29+Episode+3
 
-    Price: 2 credits"""
+    Price: 1 credits"""
     if not await DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 2)
+        await DB.reduce_credits(api_key, 1)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
