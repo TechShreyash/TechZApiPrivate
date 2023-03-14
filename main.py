@@ -2,7 +2,7 @@ from typing import Literal
 from fastapi import FastAPI
 from utils.extractor.gogo_extractor import get_m3u8
 from utils.gogo import GoGoApi
-from utils.mkvcinemas import add_task, get_task, scrapper_task
+from utils.mkvcinemas import add_task, get_task, scrapper_task, total_links
 from utils.wallflare import WallFlare
 from utils.unsplash import Unsplash
 from utils.logo import generate_logo
@@ -150,12 +150,12 @@ async def logo_maker(
     - bg: Get background from - wallflare or unsplash (default: wallflare)
     - square: True to make square logos (default: False)
 
-    Price: 10 credits"""
+    Price: 5 credits"""
     if not await DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 10)
+        await DB.reduce_credits(api_key, 5)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -358,21 +358,28 @@ async def gogo_stream(api_key: str, url: str):
 
 
 @app.get("/mkvcinemas/add", name="mkvcinemas gdtot", tags=["Mkv Cinemas"])
-async def mkvcinemas_add(api_key: str, url: str):
-    """Add scrapping from mkvcinemas to queue
+async def mkvcinemas_add(
+    api_key: str,
+    url: str,
+    max: int = 5,
+):
+    """Add scrapping task from mkvcinemas to queue
 
     - url : Url to the movie / series
+    - max : Max links to get (default: 5)
 
-    Price: 1 credits"""
+    Price: 10 credits per link"""
     if not await DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 1)
+        c = total_links(url)
+        c = c if c < max else max
+        await DB.reduce_credits(api_key, c * 10)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = add_task(url)
+    data = add_task(url, max)
     return data
 
 

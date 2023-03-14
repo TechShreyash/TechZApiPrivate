@@ -25,7 +25,23 @@ tasks = []
 hash_list = []
 
 
-def add_task(url):
+def total_links(url):
+    r = requests.get(url)
+    soup = bs(r.content, "html.parser")
+
+    mealob = (
+        soup.find("div", "sp-body").find_all("a", "gdlink")
+        if soup.find("div", "sp-body")
+        else soup.find_all("a", "gdlink")
+    )
+    if len(mealob) == 0:
+        mealob = soup.find_all("a", "button")
+
+    return len(mealob)
+
+
+def add_task(url, max):
+    global queue
     while True:
         hash = "".join(random.choices(ascii_letters + digits, k=10))
         if hash in hash_list:
@@ -35,6 +51,7 @@ def add_task(url):
                 "hash": hash,
                 "url": url,
                 "status": "pending",
+                "max": max,
             }
         )
         logger.info("Added task to queue :", hash, url)
@@ -42,14 +59,17 @@ def add_task(url):
             "success": True,
             "hash": hash,
             "status": "pending",
-            "queue": len(tasks),
+            "queue": len(queue),
         }
 
 
 def get_task(hash):
-    pos = 0
-    for task in tasks:
+    pos = 1
+    for i in queue:
+        if i.get("hash") == hash:
+            break
         pos += 1
+    for task in tasks:
         if task.get("hash") == hash:
             if task.get("status") == "pending":
                 return {"success": True, "status": "pending", "queue": pos}
@@ -66,9 +86,12 @@ def get_task(hash):
     return {"success": False, "error": "Invalid hash"}
 
 
+queue = []
+
+
 async def scrapper_task(loop):
+    global queue
     while True:
-        queue = []
         for i in tasks:
             if i.get("status") == "pending":
                 queue.append(i)
