@@ -394,7 +394,7 @@ async def mkvcinemas_get_task(api_key: str, hash: str):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 1)
+        await DB.reduce_credits(api_key, 0.5)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
