@@ -12,3 +12,5 @@ gunicorn
 yarl
 pycryptodomex
 pymongo
+selenium
+webdriver-manager

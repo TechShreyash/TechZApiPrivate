@@ -2,6 +2,7 @@ from typing import Literal
 from fastapi import FastAPI
 from utils.extractor.gogo_extractor import get_m3u8
 from utils.gogo import GoGoApi
+from utils.mkvcinemas import add_task, get_task, scrapper_task
 from utils.wallflare import WallFlare
 from utils.unsplash import Unsplash
 from utils.logo import generate_logo
@@ -12,14 +13,13 @@ from utils.db import DB
 from fastapi.responses import RedirectResponse, FileResponse
 from fastapi.openapi.utils import get_openapi
 from utils.extra import download
-import aiohttp
-import json
-import random
+import aiohttp, asyncio
 
 app = FastAPI()
 
 session = []
 AIO_SESSIONS = 1
+loop = None
 
 
 def get_session():
@@ -34,6 +34,9 @@ def get_session():
 
 @app.on_event("startup")
 async def startup_event():
+    global loop
+    loop = asyncio.get_event_loop()
+
     app.openapi_schema = get_openapi(
         title="TechZApi",
         version="1.2",
@@ -45,6 +48,9 @@ async def startup_event():
     global session
     for i in range(AIO_SESSIONS):
         session.append([aiohttp.ClientSession(), 0])
+
+    print("Starting scrapper task")
+    loop.create_task(scrapper_task(loop))
 
 
 @app.on_event("shutdown")
@@ -144,12 +150,12 @@ async def logo_maker(
     - bg: Get background from - wallflare or unsplash (default: wallflare)
     - square: True to make square logos (default: False)
 
-    Price: 5 credits"""
+    Price: 10 credits"""
     if not await DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 5)
+        await DB.reduce_credits(api_key, 10)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -316,12 +322,12 @@ async def gogo_episode(
     - id : Episode id, Ex : horimiya-dub-episode-3
     - lang : sub or dub or both
 
-    Price: 2 credits for sub and dub, 3 credits for both"""
+    Price: 1 credits for sub and dub, 2 credits for both"""
     if not await DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 3 if lang == "both" else 2)
+        await DB.reduce_credits(api_key, 2 if lang == "both" else 1)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -335,14 +341,55 @@ async def gogo_stream(api_key: str, url: str):
 
     - url : Episode url, Ex : https://anihdplay.com/streaming.php?id=MTUyODYy&title=Horimiya+%28Dub%29+Episode+3
 
-    Price: 2 credits"""
+    Price: 1 credits"""
     if not await DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
     try:
-        await DB.reduce_credits(api_key, 2)
+        await DB.reduce_credits(api_key, 1)
     except Exception as e:
         return {"success": False, "error": str(e)}
 
     data = await get_m3u8(get_session(), url)
     return {"success": True, "results": data}
+
+
+# mkv Cinemas
+
+
+@app.get("/mkvcinemas/add", name="mkvcinemas gdtot", tags=["Mkv Cinemas"])
+async def mkvcinemas_add(api_key: str, url: str):
+    """Add scrapping from mkvcinemas to queue
+
+    - url : Url to the movie / series
+
+    Price: 1 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": False, "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 1)
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+    data = add_task(url)
+    return data
+
+
+@app.get("/mkvcinemas/get", name="mkvcinemas gdtot", tags=["Mkv Cinemas"])
+async def mkvcinemas_get(api_key: str, hash: str):
+    """Add scrapping from mkvcinemas to queue
+
+    - url : Url to the movie / series
+
+    Price: 1 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": False, "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 1)
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+    data = get_task(hash)
+    return data

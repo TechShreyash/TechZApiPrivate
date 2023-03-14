@@ -130,7 +130,7 @@ class GoGoApi:
 
         data = {}
         data["DL"] = {}
-        
+
         async with self.session.get(
             f"https://{self.host}/{id}", cookies={"auth": auth_gogo}
         ) as resp:
@@ -148,7 +148,7 @@ class GoGoApi:
         dlinks = soup.find("div", "cf-download").find_all("a")
         dlink = {}
         for i in dlinks:
-            x = i.text.split("x")[1].strip()
+            x = i.text.split("x")[1].strip() + "p"
             y = i.get("href").strip()
             dlink[x] = y
 
@@ -182,7 +182,7 @@ class GoGoApi:
             dlinks = soup.find("div", "cf-download").find_all("a")
             dlink = {}
             for i in dlinks:
-                x = i.text.split("x")[1].strip()
+                x = i.text.split("x")[1].strip() + "p"
                 y = i.get("href").strip()
                 dlink[x] = y
 
@@ -225,7 +225,7 @@ class GoGoApi:
             dlinks = soup.find("div", "cf-download").find_all("a")
             dlink = {}
             for i in dlinks:
-                x = i.text.split("x")[1].strip()
+                x = i.text.split("x")[1].strip() + "p"
                 y = i.get("href").strip()
                 dlink[x] = y
 
