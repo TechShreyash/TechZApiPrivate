@@ -21,7 +21,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 executor = ThreadPoolExecutor(10)
 
 
-tasks = []
+tasks = {}
 hash_list = []
 
 
@@ -40,13 +40,25 @@ def total_links(url):
     return len(mealob)
 
 
+def get_queue_pos(hash):
+    for i in queue:
+        if i.get("hash") == hash:
+            return queue.index(i) + 1
+    return len(queue)
+
+
 def add_task(url, max):
-    global queue
     while True:
         hash = "".join(random.choices(ascii_letters + digits, k=10))
         if hash in hash_list:
             continue
-        tasks.append(
+        tasks[hash] = {
+            "url": url,
+            "status": "pending",
+            "max": max,
+        }
+        logger.info("Added task to queue :", hash, url)
+        queue.append(
             {
                 "hash": hash,
                 "url": url,
@@ -54,35 +66,27 @@ def add_task(url, max):
                 "max": max,
             }
         )
-        logger.info("Added task to queue :", hash, url)
-        return {
-            "success": True,
-            "hash": hash,
-            "status": "pending",
-            "queue": len(queue),
-        }
+        return {"success": True, "hash": hash, "queue": len(queue)}
 
 
 def get_task(hash):
-    pos = 1
-    for i in queue:
-        if i.get("hash") == hash:
-            break
-        pos += 1
-    for task in tasks:
-        if task.get("hash") == hash:
-            if task.get("status") == "pending":
-                return {"success": True, "status": "pending", "queue": pos}
-            if task.get("status") == "processing":
-                return {"success": True, "status": "processing"}
-            if task.get("status") == "failed":
-                return {"success": True, "status": "failed", "error": task.get("error")}
-            if task.get("status") == "completed":
-                return {
-                    "success": True,
-                    "status": "completed",
-                    "results": task.get("results"),
-                }
+    task = tasks.get(hash)
+    if task.get("status") == "pending":
+        return {
+            "success": True,
+            "status": "pending",
+            "queue": get_queue_pos(hash),
+        }
+    if task.get("status") == "processing":
+        return {"success": True, "status": "processing"}
+    if task.get("status") == "failed":
+        return {"success": True, "status": "failed", "error": task.get("error")}
+    if task.get("status") == "completed":
+        return {
+            "success": True,
+            "status": "completed",
+            "results": task.get("results"),
+        }
     return {"success": False, "error": "Invalid hash"}
 
 
@@ -92,37 +96,26 @@ queue = []
 async def scrapper_task(loop):
     global queue
     while True:
-        for i in tasks:
-            if i.get("status") == "pending":
-                queue.append(i)
-
         if len(queue) > 0:
-            for i in queue:
-                task = i
-                pos = 0
-                for i in tasks:
-                    if i == task:
-                        index = pos
-                        break
-                    pos += 1
+            task = queue.pop(0)
+            hash = task.get("hash")
 
-                tasks[index]["status"] = "processing"
+            tasks[hash]["status"] = "processing"
+            logger.info("Scrapping task :", task.get("hash"), task.get("url"))
+            driver = getDriver()
 
-                logger.info("Scrapping task :", task.get("hash"), task.get("url"))
-
-                driver = getDriver()
-                try:
-                    results = await loop.run_in_executor(
-                        executor, scrap_mkv, (driver, task.get("url"))
-                    )
-                    tasks[index]["status"] = "completed"
-                    tasks[index]["results"] = results
-                except Exception as e:
-                    logger.error("Error while scrapping :", e)
-                    tasks[index]["status"] = "failed"
-                    tasks[index]["error"] = str(e)
-
-        await asyncio.sleep(30)
+            try:
+                results = await loop.run_in_executor(
+                    executor, scrap_mkv, (driver, task.get("url"), task.get("max"))
+                )
+                tasks[hash]["status"] = "completed"
+                tasks[hash]["results"] = results
+            except Exception as e:
+                logger.error("Error while scrapping :", e)
+                tasks[hash]["status"] = "failed"
+                tasks[hash]["error"] = str(e)
+        else:
+            await asyncio.sleep(30)
 
 
 web_driver = None
@@ -150,7 +143,7 @@ def getDriver() -> webdriver.Chrome:
 
 
 def scrap_mkv(x):
-    wd, link = x
+    wd, link, max = x
     r = requests.get(link)
     soup = bs(r.content, "html.parser")
 
@@ -170,7 +163,7 @@ def scrap_mkv(x):
 
     pos = 1
 
-    for i in mealob[:1]:
+    for i in mealob[:max]:
         wd.get(i["href"])
         sleep(3)
         WebDriverWait(wd, 10).until(

@@ -357,8 +357,8 @@ async def gogo_stream(api_key: str, url: str):
 # mkv Cinemas
 
 
-@app.get("/mkvcinemas/add", name="mkvcinemas gdtot", tags=["Mkv Cinemas"])
-async def mkvcinemas_add(
+@app.get("/mkvcinemas/add_task", name="mkvcinemas add task", tags=["Mkv Cinemas"])
+async def mkvcinemas_add_task(
     api_key: str,
     url: str,
     max: int = 5,
@@ -383,13 +383,13 @@ async def mkvcinemas_add(
     return data
 
 
-@app.get("/mkvcinemas/get", name="mkvcinemas gdtot", tags=["Mkv Cinemas"])
-async def mkvcinemas_get(api_key: str, hash: str):
+@app.get("/mkvcinemas/get_task", name="mkvcinemas get task", tags=["Mkv Cinemas"])
+async def mkvcinemas_get_task(api_key: str, hash: str):
     """Add scrapping from mkvcinemas to queue
 
     - url : Url to the movie / series
 
-    Price: 1 credits"""
+    Price: 0.5 credits"""
     if not await DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
