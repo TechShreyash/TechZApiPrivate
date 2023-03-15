@@ -2,7 +2,13 @@ from typing import Literal
 from fastapi import FastAPI
 from utils.extractor.gogo_extractor import get_m3u8
 from utils.gogo import GoGoApi
-from utils.mkvcinemas import add_task, get_task, scrapper_task, total_links
+from utils.mkvcinemas import (
+    add_task,
+    get_task,
+    is_user_in_queue,
+    scrapper_task,
+    total_links,
+)
 from utils.wallflare import WallFlare
 from utils.unsplash import Unsplash
 from utils.logo import generate_logo
@@ -372,6 +378,9 @@ async def mkvcinemas_add_task(
     if not await DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
+    if is_user_in_queue(api_key):
+        return {"success": False, "error": "You already have a scrapping task in queue"}
+
     try:
         c = total_links(url)
         c = c if c < max else max
@@ -379,7 +388,7 @@ async def mkvcinemas_add_task(
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = add_task(url, max)
+    data = add_task(api_key,url, max)
     return data
 
 

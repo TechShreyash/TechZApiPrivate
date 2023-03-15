@@ -40,6 +40,15 @@ def total_links(url):
     return len(mealob)
 
 
+users_queue = []
+
+
+def is_user_in_queue(api):
+    if api in users_queue:
+        return True
+    return False
+
+
 def get_queue_pos(hash):
     for i in queue:
         if i.get("hash") == hash:
@@ -47,7 +56,7 @@ def get_queue_pos(hash):
     return len(queue)
 
 
-def add_task(url, max):
+def add_task(api_key, url, max):
     while True:
         hash = "".join(random.choices(ascii_letters + digits, k=10))
         if hash in hash_list:
@@ -56,6 +65,7 @@ def add_task(url, max):
             "url": url,
             "status": "pending",
             "max": max,
+            "api_key": api_key,
         }
         logger.info("Added task to queue :", hash, url)
         queue.append(
@@ -64,8 +74,10 @@ def add_task(url, max):
                 "url": url,
                 "status": "pending",
                 "max": max,
+                "api_key": api_key,
             }
         )
+        users_queue.append(api_key)
         return {"success": True, "hash": hash, "queue": len(queue)}
 
 
@@ -112,14 +124,28 @@ async def scrapper_task(loop):
                 results = await loop.run_in_executor(
                     executor,
                     scrap_mkv,
-                    (driver, task.get("url"), task.get("max"), hash),
+                    (
+                        driver,
+                        task.get("url"),
+                        task.get("max"),
+                        hash,
+                        task.get("api_key"),
+                    ),
                 )
                 tasks[hash]["status"] = "completed"
                 tasks[hash]["results"] = results
+                try:
+                    users_queue.remove(task.get("api_key"))
+                except:
+                    pass
             except Exception as e:
                 logger.error("Error while scrapping :", e)
                 tasks[hash]["status"] = "failed"
                 tasks[hash]["error"] = str(e)
+                try:
+                    users_queue.remove(task.get("api_key"))
+                except:
+                    pass
         else:
             await asyncio.sleep(30)
 
@@ -149,7 +175,7 @@ def getDriver() -> webdriver.Chrome:
 
 
 def scrap_mkv(x):
-    wd, link, max, hash = x
+    wd, link, max, hash, api_key = x
     r = requests.get(link)
     soup = bs(r.content, "html.parser")
 
@@ -198,4 +224,8 @@ def scrap_mkv(x):
         tasks[hash]["scrapped"] = f"{pos}/{len(mealob)}"
         pos += 1
 
+    try:
+        users_queue.remove(api_key)
+    except:
+        pass
     return gdtot
