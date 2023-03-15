@@ -385,7 +385,8 @@ async def mkvcinemas_add_task(
 
 @app.get("/mkvcinemas/get_task", name="mkvcinemas get task", tags=["Mkv Cinemas"])
 async def mkvcinemas_get_task(api_key: str, hash: str):
-    """Add scrapping from mkvcinemas to queue
+    """Get status of scrapping task from mkvcinemas
+    If task is completed, it will return the links
 
     - url : Url to the movie / series
 

@@ -1,3 +1,4 @@
+from concurrent.futures.thread import ThreadPoolExecutor
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -16,7 +17,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from concurrent.futures.thread import ThreadPoolExecutor
 
 executor = ThreadPoolExecutor(10)
 
@@ -78,7 +78,11 @@ def get_task(hash):
             "queue": get_queue_pos(hash),
         }
     if task.get("status") == "processing":
-        return {"success": True, "status": "processing"}
+        return {
+            "success": True,
+            "status": "processing",
+            "scrapped": task.get("scrapped"),
+        }
     if task.get("status") == "failed":
         return {"success": True, "status": "failed", "error": task.get("error")}
     if task.get("status") == "completed":
@@ -106,7 +110,9 @@ async def scrapper_task(loop):
 
             try:
                 results = await loop.run_in_executor(
-                    executor, scrap_mkv, (driver, task.get("url"), task.get("max"))
+                    executor,
+                    scrap_mkv,
+                    (driver, task.get("url"), task.get("max"), hash),
                 )
                 tasks[hash]["status"] = "completed"
                 tasks[hash]["results"] = results
@@ -143,7 +149,7 @@ def getDriver() -> webdriver.Chrome:
 
 
 def scrap_mkv(x):
-    wd, link, max = x
+    wd, link, max, hash = x
     r = requests.get(link)
     soup = bs(r.content, "html.parser")
 
@@ -159,11 +165,12 @@ def scrap_mkv(x):
     showlink = '//*[@id="showlink"]'
     landing = '//*[@id="landing"]/div/center/img'
 
-    gdtot = {}
+    gdtot = []
 
     pos = 1
+    mealob = mealob[:max]
 
-    for i in mealob[:max]:
+    for i in mealob:
         wd.get(i["href"])
         sleep(3)
         WebDriverWait(wd, 10).until(
@@ -185,7 +192,10 @@ def scrap_mkv(x):
             .lstrip(" |")
             .strip()
         )
-        gdtot[title] = wd.current_url
+        size = wd.find_element(By.TAG_NAME, "tr").text.replace("File Size", "").strip()
+        info = {"title": title, "gdtot": wd.current_url, "size": size}
+        gdtot.append(info)
+        tasks[hash]["scrapped"] = f"{pos}/{len(mealob)}"
         pos += 1
 
     return gdtot
