@@ -19,7 +19,9 @@ from utils.db import DB
 from fastapi.responses import RedirectResponse, FileResponse
 from fastapi.openapi.utils import get_openapi
 from utils.extra import download
-import aiohttp, asyncio
+import aiohttp
+import asyncio
+import os
 
 app = FastAPI()
 
@@ -40,6 +42,11 @@ def get_session():
 
 @app.on_event("startup")
 async def startup_event():
+    try:
+        os.remove("logs.txt")
+    except:
+        pass
+
     global loop
     loop = asyncio.get_event_loop()
 
@@ -388,7 +395,7 @@ async def mkvcinemas_add_task(
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = add_task(api_key,url, max)
+    data = add_task(api_key, url, max)
     return data
 
 
@@ -410,3 +417,10 @@ async def mkvcinemas_get_task(api_key: str, hash: str):
 
     data = get_task(hash)
     return data
+
+
+@app.get("/logs", tags=["Admin Only"])
+async def logs(api_key: str):
+    if api_key == "DAIKMA":
+        with open("logs.txt", "r") as f:
+            return {"success": True, "logs": f.readlines()}

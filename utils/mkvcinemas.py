@@ -15,7 +15,15 @@ import asyncio
 
 import logging
 
-logger = logging.getLogger(__name__)
+logging.basicConfig(
+    filename="logs.txt",
+    filemode="a",
+    format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
+    datefmt="%H:%M:%S",
+    level=logging.INFO,
+)
+
+logger = logging.getLogger("Mkv")
 
 
 executor = ThreadPoolExecutor(10)
@@ -67,7 +75,7 @@ def add_task(api_key, url, max):
             "max": max,
             "api_key": api_key,
         }
-        logger.info("Added task to queue :", hash, url)
+        logger.info(f"Added task to queue : {hash} {url} {tasks[hash]}")
         queue.append(
             {
                 "hash": hash,
@@ -111,14 +119,17 @@ queue = []
 
 async def scrapper_task(loop):
     global queue
+    driver = None
     while True:
         if len(queue) > 0:
+            if not driver:
+                driver = getDriver()
+
             task = queue.pop(0)
             hash = task.get("hash")
 
             tasks[hash]["status"] = "processing"
-            logger.info("Scrapping task :", task.get("hash"), task.get("url"))
-            driver = getDriver()
+            logger.info(f'Scrapping task : {task.get("hash")} {task.get("url")}')
 
             try:
                 results = await loop.run_in_executor(
@@ -139,7 +150,7 @@ async def scrapper_task(loop):
                 except:
                     pass
             except Exception as e:
-                logger.error("Error while scrapping :", e)
+                logger.info(f"Error while scrapping : {e}")
                 tasks[hash]["status"] = "failed"
                 tasks[hash]["error"] = str(e)
                 try:
@@ -147,16 +158,13 @@ async def scrapper_task(loop):
                 except:
                     pass
         else:
-            await asyncio.sleep(30)
-
-
-web_driver = None
+            if driver:
+                driver.close()
+                driver = None
+            await asyncio.sleep(10)
 
 
 def getDriver() -> webdriver.Chrome:
-    global web_driver
-    if web_driver:
-        return web_driver
 
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--headless")
