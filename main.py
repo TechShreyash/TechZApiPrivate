@@ -328,12 +328,12 @@ async def gogo_anime(api_key: str, id: str):
 
 @app.get("/gogo/episode", name="gogo episode", tags=["Gogo Anime"])
 async def gogo_episode(
-    api_key: str, id: str, lang: Literal["sub", "dub", "both"] = "sub"
+    api_key: str, id: str, lang: Literal["sub", "dub", "both", "any"] = "sub"
 ):
     """Get episode embed links from gogoanime
 
     - id : Episode id, Ex : horimiya-dub-episode-3
-    - lang : sub or dub or both
+    - lang : sub | dub | both | any
 
     Price: 1 credits for sub and dub, 2 credits for both"""
     if not await DB.is_user(api_key):

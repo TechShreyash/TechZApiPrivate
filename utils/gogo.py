@@ -152,6 +152,9 @@ class GoGoApi:
             y = i.get("href").strip()
             dlink[x] = y
 
+        if lang == "any":
+            return {"embeds": embeds, "dlinks": dlink}
+
         if "dub" in id:
             if lang == "dub" or lang == "both":
                 data["DUB"] = embeds
