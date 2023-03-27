@@ -42,11 +42,6 @@ def get_session():
 
 @app.on_event("startup")
 async def startup_event():
-    try:
-        os.remove("logs.txt")
-    except:
-        pass
-
     global loop
     loop = asyncio.get_event_loop()
 
