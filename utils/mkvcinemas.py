@@ -164,12 +164,9 @@ async def scrapper_task(loop):
             await asyncio.sleep(10)
 
 
-import os
-
-
 def getDriver() -> webdriver.Chrome:
+
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -179,8 +176,7 @@ def getDriver() -> webdriver.Chrome:
 
     chrome_options.add_experimental_option("prefs", prefs)
     myDriver = webdriver.Chrome(
-        executable_path=os.environ.get("CHROMEDRIVER_PATH"),
-        chrome_options=chrome_options,
+        service=Service(ChromeDriverManager().install()), options=chrome_options
     )
 
     return myDriver
