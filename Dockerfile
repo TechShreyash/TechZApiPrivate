@@ -1,14 +1,9 @@
-ARG PORT=443
+FROM python:3.10 
+WORKDIR /code 
+COPY ./requirements.txt /code/requirements.txt
+ 
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-FROM cypress/browsers:latest
-FROM python:3.10
+COPY ./app /code/app
 
-COPY requirements.txt  .
-
-ENV PATH /home/root/.local/bin:${PATH}
-
-RUN  apt-get update && apt-get install -y python3-pip && pip install -U -r requirements.txt  
-
-COPY . .
-
-CMD uvicorn main:app --host 0.0.0.0 --port $PORT
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
