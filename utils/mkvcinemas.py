@@ -185,17 +185,20 @@ def scrap_mkv(x):
     r = requests.get(link)
     soup = bs(r.content, "html.parser")
 
-    mealob = (
-        soup.find("div", "sp-body").find_all("a", "gdlink")
-        if soup.find("div", "sp-body")
-        else soup.find_all("a", "gdlink")
-    )
-    if len(mealob) == 0:
-        mealob = soup.find_all("a", "button")
+    mealob = []
+    for i in soup.find_all("a"):
+        u = i.get("href")
+        if u:
+            u = str(u)
+            if u.startswith("https://ww3.mkvcinemas.lat?"):
+                mealob.append(u)
 
+    print('Found', len(mealob), 'links in', link)
+
+
+    b1 = '//*[@id="soralink-human-verif-main"]'
     generater = '//*[@id="generater"]'
     showlink = '//*[@id="showlink"]'
-    landing = '//*[@id="landing"]/div/center/img'
 
     gdtot = []
 

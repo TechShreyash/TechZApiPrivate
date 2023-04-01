@@ -579,3 +579,19 @@
 11:44:10,441 urllib3.connectionpool DEBUG http://localhost:57886 "DELETE /session/1fd7ce0063f4f4e00f2bc23d4fe15b01/window HTTP/1.1" 200 12
 11:44:10,444 selenium.webdriver.remote.remote_connection DEBUG Remote response: status=200 | data={"value":[]} | headers=HTTPHeaderDict({'Content-Length': '12', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
 11:44:10,444 selenium.webdriver.remote.remote_connection DEBUG Finished Request
+19:14:49,638 Mkv INFO Added task to queue : JZISAT1369 https://ww3.mkvcinemas.lat/pathu-thala-2023/ {'url': 'https://ww3.mkvcinemas.lat/pathu-thala-2023/', 'status': 'pending', 'max': 2, 'api_key': 'DAIKMA'}
+19:14:51,118 WDM INFO ====== WebDriver manager ======
+19:14:52,18 WDM INFO Get LATEST chromedriver version for google-chrome 111.0.5563
+19:14:53,352 WDM INFO About to download new driver from https://chromedriver.storage.googleapis.com/111.0.5563.64/chromedriver_win32.zip
+19:15:06,571 WDM INFO Driver has been saved in cache [C:\Users\hp\.wdm\drivers\chromedriver\win32\111.0.5563]
+19:15:08,354 Mkv INFO Scrapping task : JZISAT1369 https://ww3.mkvcinemas.lat/pathu-thala-2023/
+19:17:13,291 Mkv INFO Added task to queue : 7NDWUROZeg https://ww3.mkvcinemas.lat/pathu-thala-2023/ {'url': 'https://ww3.mkvcinemas.lat/pathu-thala-2023/', 'status': 'pending', 'max': 2, 'api_key': 'DAIKMA'}
+19:17:14,967 WDM INFO ====== WebDriver manager ======
+19:17:15,521 WDM INFO Get LATEST chromedriver version for google-chrome 111.0.5563
+19:17:16,707 WDM INFO Driver [C:\Users\hp\.wdm\drivers\chromedriver\win32\111.0.5563\chromedriver.exe] found in cache
+19:17:17,766 Mkv INFO Scrapping task : 7NDWUROZeg https://ww3.mkvcinemas.lat/pathu-thala-2023/
+19:18:57,752 Mkv INFO Added task to queue : qOG8ZjcYle https://ww3.mkvcinemas.lat/pathu-thala-2023/ {'url': 'https://ww3.mkvcinemas.lat/pathu-thala-2023/', 'status': 'pending', 'max': 2, 'api_key': 'DAIKMA'}
+19:19:07,388 WDM INFO ====== WebDriver manager ======
+19:19:07,937 WDM INFO Get LATEST chromedriver version for google-chrome 111.0.5563
+19:19:09,57 WDM INFO Driver [C:\Users\hp\.wdm\drivers\chromedriver\win32\111.0.5563\chromedriver.exe] found in cache
+19:19:10,106 Mkv INFO Scrapping task : qOG8ZjcYle https://ww3.mkvcinemas.lat/pathu-thala-2023/
