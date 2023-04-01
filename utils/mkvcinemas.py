@@ -129,7 +129,8 @@ async def scrapper_task(loop):
             hash = task.get("hash")
 
             tasks[hash]["status"] = "processing"
-            logger.info(f'Scrapping task : {task.get("hash")} {task.get("url")}')
+            logger.info(
+                f'Scrapping task : {task.get("hash")} {task.get("url")}')
 
             try:
                 results = await loop.run_in_executor(
@@ -170,11 +171,8 @@ def getDriver() -> webdriver.Chrome:
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
-
-    prefs = {"profile.managed_default_content_settings.images": 2}
-
-    chrome_options.add_experimental_option("prefs", prefs)
+    chrome_options.add_experimental_option(
+        "excludeSwitches", ["enable-logging"])
     myDriver = webdriver.Chrome(
         service=Service(ChromeDriverManager().install()), options=chrome_options
     )
@@ -205,32 +203,41 @@ def scrap_mkv(x):
     mealob = mealob[:max]
 
     for i in mealob:
-        wd.get(i["href"])
-        sleep(3)
-        WebDriverWait(wd, 10).until(
-            ec.element_to_be_clickable((By.XPATH, landing))
-        ).click()
-        WebDriverWait(wd, 10).until(
-            ec.element_to_be_clickable((By.XPATH, generater))
-        ).click()
-        WebDriverWait(wd, 10).until(
-            ec.element_to_be_clickable((By.XPATH, showlink))
-        ).click()
-        IItab = wd.window_handles[1]
-        wd.close()
-        wd.switch_to.window(IItab)
-        title = (
-            wd.title.replace("GDToT", "")
-            .split("mkvCinemas")[0]
-            .rstrip("- ")
-            .lstrip(" |")
-            .strip()
-        )
-        size = wd.find_element(By.TAG_NAME, "tr").text.replace("File Size", "").strip()
-        info = {"title": title, "gdtot": wd.current_url, "size": size}
-        gdtot.append(info)
-        tasks[hash]["scrapped"] = f"{pos}/{len(mealob)}"
-        pos += 1
+        try:
+            i = i.replace('ww2.mkvcinemas.lat', 'ww3.mkvcinemas.lat')
+            print('Scraping', i)
+            wd.get(i)
+            sleep(3)
+            WebDriverWait(wd, 10).until(
+                ec.element_to_be_clickable((By.XPATH, b1))
+            ).click()
+            sleep(10)
+            WebDriverWait(wd, 10).until(
+                ec.element_to_be_clickable((By.XPATH, generater))
+            ).click()
+            sleep(5)
+            WebDriverWait(wd, 10).until(
+                ec.element_to_be_clickable((By.XPATH, showlink))
+            ).click()
+            IItab = wd.window_handles[1]
+            wd.close()
+            wd.switch_to.window(IItab)
+            title = (
+                wd.title.replace("GDToT", "")
+                .split("mkvCinemas")[0]
+                .rstrip("- ")
+                .lstrip(" |")
+                .strip()
+            )
+            size = wd.find_element(By.TAG_NAME, "tr").text.replace(
+                "File Size", "").strip()
+            info = {"title": title, "gdtot": wd.current_url, "size": size}
+            gdtot.append(info)
+            tasks[hash]["scrapped"] = f"{pos}/{len(mealob)}"
+            pos += 1
+        except Exception as e:
+            print(e)
+            pass
 
     try:
         users_queue.remove(api_key)
