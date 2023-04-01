@@ -1,9 +1,18 @@
-FROM python:3.10 
-WORKDIR /code 
-COPY ./requirements.txt /code/requirements.txt
- 
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+ARG PORT=443
 
-COPY . /code
+FROM cypress/browsers:latest
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+
+RUN apt-get install python3 -y
+
+RUN echo $(python3 -m site --user-base)
+
+COPY requirements.txt  .
+
+ENV PATH /home/root/.local/bin:${PATH}
+
+RUN  apt-get update && apt-get install -y python3-pip && pip install -U -r requirements.txt  
+
+COPY . .
+
+CMD uvicorn main:app --host 0.0.0.0 --port $PORT

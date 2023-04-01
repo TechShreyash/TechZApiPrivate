@@ -131,7 +131,7 @@ async def scrapper_task(loop):
             tasks[hash]["status"] = "processing"
             logger.info(f'Scrapping task : {task.get("hash")} {task.get("url")}')
 
-            if 1== 1:
+            try:
                 results = await loop.run_in_executor(
                     executor,
                     scrap_mkv,
@@ -149,14 +149,14 @@ async def scrapper_task(loop):
                     users_queue.remove(task.get("api_key"))
                 except:
                     pass
-            # except Exception as e:
-            #     logger.info(f"Error while scrapping : {e}")
-            #     tasks[hash]["status"] = "failed"
-            #     tasks[hash]["error"] = str(e)
-            #     try:
-            #         users_queue.remove(task.get("api_key"))
-            #     except:
-            #         pass
+            except Exception as e:
+                logger.info(f"Error while scrapping : {e}")
+                tasks[hash]["status"] = "failed"
+                tasks[hash]["error"] = str(e)
+                try:
+                    users_queue.remove(task.get("api_key"))
+                except:
+                    pass
         else:
             if driver:
                 driver.close()
