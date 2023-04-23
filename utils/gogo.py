@@ -13,7 +13,7 @@ Gcookie = None
 
 class GoGoApi:
     def __init__(self, session) -> None:
-        self.host = "gogoanime.gr"
+        self.host = "gogoanime.cl"
         self.session = session
 
     async def latest(self, page=1):
@@ -239,7 +239,7 @@ class GoGoApi:
 
     def get_gogo_cookie(self, email, password):
         s = requests.session()
-        animelink = "https://gogoanime.gr/login.html"
+        animelink = "https://gogoanime.cl/login.html"
         response = s.get(animelink)
         response_html = response.text
         soup = bs(response_html, "html.parser")
@@ -251,7 +251,7 @@ class GoGoApi:
         headers = {
             "User-Agent": "Mozilla/5.0 (Linux; Android 9; vivo 1916) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Mobile Safari/537.36",
             "authority": "gogo-cdn.com",
-            "referer": f"https://gogoanime.gr/",
+            "referer": f"https://gogoanime.cl/",
             "content-type": "application/x-www-form-urlencoded",
         }
         s.headers = headers
