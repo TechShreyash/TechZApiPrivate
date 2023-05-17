@@ -2,13 +2,6 @@ from typing import Literal
 from fastapi import FastAPI
 from utils.extractor.gogo_extractor import get_m3u8
 from utils.gogo import GoGoApi
-from utils.mkvcinemas import (
-    add_task,
-    get_task,
-    is_user_in_queue,
-    scrapper_task,
-    total_links,
-)
 from utils.wallflare import WallFlare
 from utils.unsplash import Unsplash
 from utils.logo import generate_logo
@@ -16,18 +9,16 @@ from utils.lyrics import get_lyrics
 from utils.nyaa import Nyaasi
 from utils.ud import get_urbandict
 from utils.db import DB
-from fastapi.responses import RedirectResponse, FileResponse
+from fastapi.responses import FileResponse
 from fastapi.openapi.utils import get_openapi
 from utils.extra import download
 import aiohttp
-import asyncio
-import os
 
 app = FastAPI()
 
 session = []
-AIO_SESSIONS = 1
-loop = None
+AIO_SESSIONS = 5
+# loop = None
 
 
 def get_session():
@@ -42,8 +33,8 @@ def get_session():
 
 @app.on_event("startup")
 async def startup_event():
-    global loop
-    loop = asyncio.get_event_loop()
+    # global loop
+    # loop = asyncio.get_event_loop()
 
     app.openapi_schema = get_openapi(
         title="TechZApi",
@@ -58,13 +49,13 @@ async def startup_event():
         session.append([aiohttp.ClientSession(), 0])
 
     print("Starting scrapper task")
-    loop.create_task(scrapper_task(loop))
+    # loop.create_task(scrapper_task(loop))
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     for i in session:
-        await (i[0]).close()
+        await i[0].close()
 
 
 @app.get("/", name="home", tags=["Home"])
@@ -362,60 +353,9 @@ async def gogo_stream(api_key: str, url: str):
     return {"success": True, "results": data}
 
 
-# mkv Cinemas
-
-
-@app.get("/mkvcinemas/add_task", name="mkvcinemas add task", tags=["Mkv Cinemas"])
-async def mkvcinemas_add_task(
-    api_key: str,
-    url: str,
-    max: int = 5,
-):
-    """Add scrapping task from mkvcinemas to queue
-
-    - url : Url to the movie / series
-    - max : Max links to get (default: 5)
-
-    Price: 10 credits per link"""
-    if not await DB.is_user(api_key):
-        return {"success": False, "error": "Invalid api key"}
-
-    if is_user_in_queue(api_key):
-        return {"success": False, "error": "You already have a scrapping task in queue"}
-
-    try:
-        c = total_links(url)
-        c = c if c < max else max
-        await DB.reduce_credits(api_key, c * 10)
-    except Exception as e:
-        return {"success": False, "error": str(e)}
-
-    data = add_task(api_key, url, max)
-    return data
-
-
-@app.get("/mkvcinemas/get_task", name="mkvcinemas get task", tags=["Mkv Cinemas"])
-async def mkvcinemas_get_task(api_key: str, hash: str):
-    """Get status of scrapping task from mkvcinemas
-    If task is completed, it will return the links
-
-    - url : Url to the movie / series
-
-    Price: 0.5 credits"""
-    if not await DB.is_user(api_key):
-        return {"success": False, "error": "Invalid api key"}
-
-    try:
-        await DB.reduce_credits(api_key, 0.5)
-    except Exception as e:
-        return {"success": False, "error": str(e)}
-
-    data = get_task(hash)
-    return data
-
-
 @app.get("/logs", tags=["Admin Only"])
 async def logs(api_key: str):
     if api_key == "DAIKMA":
         with open("logs.txt", "r") as f:
             return {"success": True, "logs": f.readlines()}
+
