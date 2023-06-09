@@ -18,7 +18,6 @@ app = FastAPI()
 
 session = []
 AIO_SESSIONS = 5
-# loop = None
 
 
 def get_session():
@@ -33,23 +32,17 @@ def get_session():
 
 @app.on_event("startup")
 async def startup_event():
-    # global loop
-    # loop = asyncio.get_event_loop()
-
     app.openapi_schema = get_openapi(
         title="TechZApi",
-        version="1.2",
+        version="1.3",
         description="Use powerfull api features provided by TechZBots",
         routes=app.routes,
     )
 
-    print("Creating Aiohttp Session")
+    print("Creating Aiohttp Sessions...")
     global session
     for i in range(AIO_SESSIONS):
         session.append([aiohttp.ClientSession(), 0])
-
-    print("Starting scrapper task")
-    # loop.create_task(scrapper_task(loop))
 
 
 @app.on_event("shutdown")
@@ -268,7 +261,7 @@ async def gogo_latest(api_key: str, page: int = 1):
     try:
         await DB.reduce_credits(api_key, 1)
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        pass
 
     data = await GoGoApi(get_session()).latest(page)
     return {"success": True, "results": data}
@@ -351,11 +344,3 @@ async def gogo_stream(api_key: str, url: str):
 
     data = await get_m3u8(get_session(), url)
     return {"success": True, "results": data}
-
-
-@app.get("/logs", tags=["Admin Only"])
-async def logs(api_key: str):
-    if api_key == "DAIKMA":
-        with open("logs.txt", "r") as f:
-            return {"success": True, "logs": f.readlines()}
-

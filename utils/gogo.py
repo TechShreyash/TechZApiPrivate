@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup as bs
-import aiohttp, requests
+import requests
+import time
 
 
 def format_url(url):
@@ -8,15 +9,25 @@ def format_url(url):
     return url.replace("mixdrop.co", "mixdrop.ch").replace("dood.wf", "dood.yt")
 
 
-Gcookie = None
+Gcookie = {}
+LATEST_CACHE = {}
+SEARCH_CACHE = {"query": {}}
+ANIME_CACHE = {}
 
 
 class GoGoApi:
     def __init__(self, session) -> None:
-        self.host = "gogoanime.cl"
+        self.host = "gogoanime.hu"
         self.session = session
 
     async def latest(self, page=1):
+        global LATEST_CACHE
+
+        if page in LATEST_CACHE:
+            if time.time() - LATEST_CACHE.get(page, {}).get("time", 0) < 60 * 5:
+                print("from cache")
+                return LATEST_CACHE[page]["results"]
+
         async with self.session.get(f"https://{self.host}?page={page}") as resp:
             soup = bs(await resp.read(), "html.parser")
         div = soup.find("ul", "items")
@@ -24,7 +35,7 @@ class GoGoApi:
 
         results = []
         for i in animes:
-            id = i.find("a").get("href").replace("/category/", "").strip(" /")
+            id = i.find("a").get("href").strip("/")
             img = i.find("img").get("src").strip()
             lang = i.find("div", "type").get("class")[1].replace("ic-", "").strip()
             title = i.find("a").get("title").strip()
@@ -33,9 +44,20 @@ class GoGoApi:
                 {"id": id, "img": img, "title": title, "lang": lang, "episode": episode}
             )
 
+        if len(results) != 0:
+            LATEST_CACHE[page] = {"time": time.time(), "results": results}
         return results
 
     async def search(self, query):
+        global SEARCH_CACHE
+
+        if query in SEARCH_CACHE.get("query", {}):
+            print("from cache")
+            return SEARCH_CACHE["query"][query]
+
+        if time.time() - SEARCH_CACHE.get("time", 0) < 60 * 5:
+            SEARCH_CACHE = {"time": time.time(), "query": {}}
+
         async with self.session.get(
             f"https://{self.host}/search.html?keyword=" + query
         ) as resp:
@@ -53,9 +75,19 @@ class GoGoApi:
             title = i.find("p", "name").text.strip()
             released = i.find("p", "released").text.replace("Released:", "").strip()
             results.append({"id": id, "img": img, "title": title, "year": released})
+
+        if len(results) != 0:
+            SEARCH_CACHE["query"][query] = results
         return results
 
     async def anime(self, anime):
+        global ANIME_CACHE
+
+        if anime in ANIME_CACHE:
+            if time.time() - ANIME_CACHE.get(anime, {}).get("time", 0) < 60 * 10:
+                print("from cache")
+                return ANIME_CACHE[anime]["results"]
+
         async with self.session.get(f"https://{self.host}/category/" + anime) as resp:
             soup = bs(
                 await resp.text(),
@@ -97,6 +129,9 @@ class GoGoApi:
 
             y = " ".join(i.split(":")[1:]).strip()
             data[x] = y
+
+        if len(data) != 0:
+            ANIME_CACHE[anime] = {"time": time.time(), "results": data}
         return data
 
     async def _get_episodes(self, anime):
@@ -122,11 +157,22 @@ class GoGoApi:
 
     async def episode(self, id, lang):
         global Gcookie
-        if Gcookie == None:
-            Gcookie = self.get_gogo_cookie(
-                "qwertytechz123@gmail.com", "P@8eqB7@YpJz5ea"
-            )
-        auth_gogo = Gcookie
+        if "cookie" not in Gcookie:
+            Gcookie = {
+                "time": time.time(),
+                "cookie": self.get_gogo_cookie(
+                    "qwertytechz123@gmail.com", "P@8eqB7@YpJz5ea"
+                ),
+            }
+
+        if time.time() - Gcookie["time"] > 60 * 10:
+            Gcookie = {
+                "time": time.time(),
+                "cookie": self.get_gogo_cookie(
+                    "qwertytechz123@gmail.com", "P@8eqB7@YpJz5ea"
+                ),
+            }
+        auth_gogo = Gcookie["cookie"]
 
         data = {}
         data["DL"] = {}
@@ -239,7 +285,7 @@ class GoGoApi:
 
     def get_gogo_cookie(self, email, password):
         s = requests.session()
-        animelink = "https://gogoanime.cl/login.html"
+        animelink = "https://gogoanime.hu/login.html"
         response = s.get(animelink)
         response_html = response.text
         soup = bs(response_html, "html.parser")
@@ -251,7 +297,7 @@ class GoGoApi:
         headers = {
             "User-Agent": "Mozilla/5.0 (Linux; Android 9; vivo 1916) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Mobile Safari/537.36",
             "authority": "gogo-cdn.com",
-            "referer": f"https://gogoanime.cl/",
+            "referer": f"https://gogoanime.hu/",
             "content-type": "application/x-www-form-urlencoded",
         }
         s.headers = headers
