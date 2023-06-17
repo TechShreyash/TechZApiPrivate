@@ -143,10 +143,10 @@ class TPXAnime:
             return False
 
 
-# async def main():
-#     ses = aiohttp.ClientSession()
-#     print((await TPXANIME(ses).latest()))
-#     await ses.close()
+async def main():
+    ses = aiohttp.ClientSession()
+    print((await TPXANIME(ses).latest()))
+    await ses.close()
 
 
-# print(asyncio.run(main()))
+print(asyncio.run(main()))
