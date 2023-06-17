@@ -348,7 +348,7 @@ async def gogo_stream(api_key: str, url: str):
 
 
 @app.get("/tpx/latest", name="tpx latest", tags=["TPX Anime"])
-async def tpx_latest(api_key: str, , page: int = 1):
+async def tpx_latest(api_key: str, page: int = 1):
     """Get latest released animes from TPX Anime (hindisub.in)
 
     - page: Page number (default: 1)
