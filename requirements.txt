@@ -15,3 +15,4 @@ pymongo
 selenium
 pybypass
 undetected_chromedriver
+webdriver_manager
