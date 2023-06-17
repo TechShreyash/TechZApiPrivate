@@ -12,6 +12,7 @@ from utils.db import DB
 from fastapi.responses import FileResponse
 from fastapi.openapi.utils import get_openapi
 from utils.extra import download
+from utils.tpxanime import TPXAnime
 import aiohttp
 
 app = FastAPI()
@@ -343,4 +344,23 @@ async def gogo_stream(api_key: str, url: str):
         return {"success": False, "error": str(e)}
 
     data = await get_m3u8(get_session(), url)
+    return {"success": True, "results": data}
+
+
+@app.get("/tpx/latest", name="tpx latest", tags=["TPX Anime"])
+async def tpx_latest(api_key: str, , page: int = 1):
+    """Get latest released animes from TPX Anime (hindisub.in)
+
+    - page: Page number (default: 1)
+
+    Price: 5 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": False, "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 1)
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+    data = await TPXAnime(get_session()).latest(page)
     return {"success": True, "results": data}
