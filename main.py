@@ -362,5 +362,8 @@ async def tpx_latest(api_key: str, page: int = 1):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await TPXAnime(get_session()).latest(page)
-    return {"success": True, "results": data}
+    try:
+        data = await TPXAnime(get_session()).latest(page)
+        return {"success": True, "results": data}
+    except Exception as e:
+        return FileResponse('image.png')

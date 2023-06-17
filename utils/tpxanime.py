@@ -48,9 +48,13 @@ class TPXAnime:
                 options=chrome_options,
             )
             driver.get(f"https://{self.host}/page/{page}")
-            WebDriverWait(driver, 30).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, ".herald-mod-title"))
-            )
+            try:
+                WebDriverWait(driver, 30).until(
+                    EC.element_to_be_clickable((By.CSS_SELECTOR, ".herald-mod-title"))
+                )
+            except:
+                pass
+            driver.save_screenshot("image.png")
             html = driver.page_source
             driver.quit()
         else:
