@@ -9,6 +9,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 def bypass(url):
@@ -37,7 +39,14 @@ class TPXAnime:
         if await self.isCloudflareUP():
             chrome_options = Options()
             chrome_options.add_argument("--headless")
-            driver = uc.Chrome(options=chrome_options)
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+            chrome_options.add_experimental_option(
+                "excludeSwitches", ["enable-logging"]
+            )
+            driver = uc.Chrome(
+                service=Service(ChromeDriverManager().install()), options=chrome_options
+            )
             driver.get("https://hindisub.com/?s=tomodachi%20game")
             WebDriverWait(driver, 30).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, ".herald-mod-title"))
