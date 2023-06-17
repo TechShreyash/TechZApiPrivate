@@ -11,6 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+import os
 
 
 def bypass(url):
@@ -38,16 +39,15 @@ class TPXAnime:
 
         if await self.isCloudflareUP():
             chrome_options = Options()
+            chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
-            chrome_options.add_experimental_option(
-                "excludeSwitches", ["enable-logging"]
-            )
             driver = uc.Chrome(
-                service=Service(ChromeDriverManager().install()), options=chrome_options
+                executable_path=os.environ.get("CHROMEDRIVER_PATH"),
+                options=chrome_options,
             )
-            driver.get("https://hindisub.com/?s=tomodachi%20game")
+            driver.get(f"https://{self.host}/page/{page}")
             WebDriverWait(driver, 30).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, ".herald-mod-title"))
             )
