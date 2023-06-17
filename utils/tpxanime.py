@@ -145,7 +145,7 @@ class TPXAnime:
 
 async def main():
     ses = aiohttp.ClientSession()
-    print((await TPXANIME(ses).latest()))
+    print((await TPXAnime(ses).latest()))
     await ses.close()
 
 
