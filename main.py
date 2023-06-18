@@ -386,7 +386,7 @@ async def tpx_search(api_key: str, query: str):
 
 
 @app.get("/tpx/is_cloudflare_up", name="tpx is_cloudflare_up", tags=["TPX Anime"])
-async def tpx_isCloudflareUp(api_key: str, query: str):
+async def tpx_isCloudflareUp(api_key: str):
     """Check if cloudflare is up on TPX Anime (hindisub.in)
 
     If it is up, then only /tpx/bypass will work
@@ -402,7 +402,7 @@ async def tpx_isCloudflareUp(api_key: str, query: str):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-    data = await TPXAnime(get_session()).search(query)
+    data = await TPXAnime(get_session()).isCloudflareUP()
     return {"success": True, "results": data}
 
 
