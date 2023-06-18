@@ -3,19 +3,8 @@ import PyBypass
 import time
 import asyncio
 import aiohttp
+import json
 import base64
-import undetected_chromedriver as uc
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-import os
-
-
-def bypass(url):
-    return PyBypass.bypass(url)
 
 
 LATEST_CACHE = {}
@@ -30,6 +19,9 @@ class TPXAnime:
         self.session = session
 
     async def latest(self, page=1):
+        if (await self.isCloudflareUP()) is True:
+            return "Cloudflare is up on the site. Please try again later."
+
         global LATEST_CACHE
 
         if page in LATEST_CACHE:
@@ -37,44 +29,21 @@ class TPXAnime:
                 print("from cache")
                 return LATEST_CACHE[page]["results"]
 
-        if await self.isCloudflareUP():
-            chrome_options = Options()
-            chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
-            chrome_options.add_argument("--headless")
-            chrome_options.add_argument("--no-sandbox")
-            chrome_options.add_argument("--disable-dev-shm-usage")
-            driver = uc.Chrome(
-                executable_path=os.environ.get("CHROMEDRIVER_PATH"),
-                options=chrome_options,
+        async with self.session.get(f"https://hindisub.com/page/{page}") as resp:
+            soup = bs(
+                await resp.text(),
+                "html.parser",
             )
-            driver.get(f"https://{self.host}/page/{page}")
-            try:
-                WebDriverWait(driver, 30).until(
-                    EC.element_to_be_clickable((By.CSS_SELECTOR, ".herald-mod-title"))
-                )
-            except:
-                pass
-            driver.save_screenshot("image.png")
-            html = driver.page_source
-            driver.quit()
-        else:
-            async with self.session.get(f"https://{self.host}/page/{page}") as resp:
-                html = await resp.read()
-
-        soup = bs(html, "html.parser")
-
         animes = soup.find_all("article")
-
         results = []
+
         for i in animes:
             id = i.find("a").get("href").split("/")[3]
-            img = i.find("img").get("data-lazy-srcset").strip()
-
+            img = i.find("img").get("srcset").strip()
             imgs = {}
             for q in img.split(","):
                 x, y = q.strip().split(" ")
                 imgs[y.replace("w", "")] = x
-
             title = i.find("h2", "entry-title").text.strip()
             updated_on = i.find("span", "updated").text.strip()
             results.append(
@@ -86,6 +55,8 @@ class TPXAnime:
         return results
 
     async def search(self, query):
+        if (await self.isCloudflareUP()) is True:
+            return "Cloudflare is up on the site. Please try again later."
         global SEARCH_CACHE
 
         if query in SEARCH_CACHE.get("query", {}):
@@ -103,10 +74,9 @@ class TPXAnime:
         animes = soup.find_all("article")
 
         results = []
-        print(soup)
         for i in animes:
             id = i.find("a").get("href").split("/")[3]
-            img = i.find("img").get("data-lazy-srcset").strip()
+            img = i.find("img").get("srcset").strip()
 
             imgs = {}
             for q in img.split(","):
@@ -123,10 +93,77 @@ class TPXAnime:
             SEARCH_CACHE["query"][query] = results
         return results
 
+    async def anime(self, anime):
+        if (await self.isCloudflareUP()) is True:
+            return "Cloudflare is up on the site. Please try again later."
+        global ANIME_CACHE
+
+        if anime in ANIME_CACHE:
+            if time.time() - ANIME_CACHE.get(anime, {}).get("time", 0) < 60 * 60:
+                print("from cache")
+                return ANIME_CACHE[anime]["results"]
+
+        async with self.session.get(f"https://{self.host}/" + anime) as resp:
+            soup = bs(
+                await resp.text(),
+                "html.parser",
+            )
+
+        title = soup.find("h1", "entry-title").text
+        img = soup.find("div", "herald-post-thumbnail").find("img").get("srcset")
+
+        imgs = {}
+        for q in img.split(","):
+            x, y = q.strip().split(" ")
+            imgs[y.replace("w", "")] = x
+
+        data = {"id": anime, "title": title, "img": imgs}
+
+        info = soup.find("div", "entry-content").find_all("p")
+        a = False
+        z = False
+
+        for i in info:
+            i = i.text.strip()
+
+            if a is False:
+                if "name" in i.lower():
+                    a = True
+                else:
+                    continue
+
+            x = i.split(":")[0].strip().lower()
+            print(x)
+
+            y = " ".join(i.split(":")[1:]).strip(" -,")
+            if z is True:
+                x = "synopsis"
+                data[x] = i
+                break
+            else:
+                data[x] = y
+
+            if x == "genre":
+                z = True
+
+        if len(data) != 0:
+            ANIME_CACHE[anime] = {"time": time.time(), "results": data}
+        return data
+
+    async def bypass(self, url):
+        e = 0
+        while e < 5:
+            try:
+                bypassed = PyBypass.bypass(url)
+                return bypassed
+            except:
+                e += 1
+                continue
+
     async def isCloudflareUP(self):
         global CLOUDFLARE_CACHE
 
-        if time.time() - CLOUDFLARE_CACHE.get("time", 0) < 60 * 60:
+        if time.time() - CLOUDFLARE_CACHE.get("time", 0) < 60 * 10:
             return CLOUDFLARE_CACHE["status"]
 
         async with self.session.get(
@@ -145,7 +182,13 @@ class TPXAnime:
 
 async def main():
     ses = aiohttp.ClientSession()
-    print((await TPXAnime(ses).latest()))
+    print(
+        (
+            await TPXAnime(ses).anime(
+                "tonikawa-over-the-moon-for-you-season-2-hindi-sub-01"
+            )
+        )
+    )
     await ses.close()
 
 

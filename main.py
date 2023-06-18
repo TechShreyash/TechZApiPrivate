@@ -353,7 +353,7 @@ async def tpx_latest(api_key: str, page: int = 1):
 
     - page: Page number (default: 1)
 
-    Price: 5 credits"""
+    Price: 1 credits"""
     if not await DB.is_user(api_key):
         return {"success": False, "error": "Invalid api key"}
 
@@ -362,8 +362,83 @@ async def tpx_latest(api_key: str, page: int = 1):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+    data = await TPXAnime(get_session()).latest(page)
+    return {"success": True, "results": data}
+
+
+@app.get("/tpx/search", name="tpx search", tags=["TPX Anime"])
+async def tpx_search(api_key: str, query: str):
+    """Search animes on TPX Anime (hindisub.in)
+
+    - query: Search query
+
+    Price: 1 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": False, "error": "Invalid api key"}
+
     try:
-        data = await TPXAnime(get_session()).latest(page)
-        return {"success": True, "results": data}
+        await DB.reduce_credits(api_key, 1)
     except Exception as e:
-        return FileResponse('image.png')
+        return {"success": False, "error": str(e)}
+
+    data = await TPXAnime(get_session()).search(query)
+    return {"success": True, "results": data}
+
+
+@app.get("/tpx/is_cloudflare_up", name="tpx is_cloudflare_up", tags=["TPX Anime"])
+async def tpx_isCloudflareUp(api_key: str, query: str):
+    """Check if cloudflare is up on TPX Anime (hindisub.in)
+
+    If it is up, then only /tpx/bypass will work
+
+    /tpx/latest /tpx/search /tpx/anime will not work if cloudflare is up
+
+    Price: 1 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": False, "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 1)
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+    data = await TPXAnime(get_session()).search(query)
+    return {"success": True, "results": data}
+
+
+@app.get("/tpx/anime", name="tpx anime", tags=["TPX Anime"])
+async def tpx_anime(api_key: str, id: str):
+    """Get anime info from TPX Anime (hindisub.in)
+
+    - id : Anime id, Ex : tonikawa-over-the-moon-for-you-season-2-hindi-sub-01
+
+    Price: 1 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": False, "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 1)
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+    data = await TPXAnime(get_session()).anime(id)
+    return {"success": True, "results": data}
+
+
+@app.get("/tpx/bypass", name="tpx bypass", tags=["TPX Anime"])
+async def tpx_anime(api_key: str, url: str):
+    """Bypass url shortner and get anime info from TPX Anime (hindisub.in)
+
+    - url : Url to bypass, Ex : https://links.hindisub.com/redirect/main2.php?url=f41616t5k40314s2v44646s2r5p5m4q4i4l4c444s216l434b4m5l494p4v214l303f3p3p323o3n2x3m4v5q5o524p4f5r2v374q4q33414e3k3b3p2k4g4y2g5i4p5j4o5s4
+
+    Price: 2 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": False, "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 2)
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+    data = await TPXAnime(get_session()).bypass(url)
+    return {"success": True, "results": data}

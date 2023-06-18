@@ -12,7 +12,3 @@ gunicorn
 yarl
 pycryptodomex
 pymongo
-selenium
-pybypass
-undetected_chromedriver
-webdriver_manager
