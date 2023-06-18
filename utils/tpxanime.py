@@ -180,16 +180,16 @@ class TPXAnime:
             return False
 
 
-async def main():
-    ses = aiohttp.ClientSession()
-    print(
-        (
-            await TPXAnime(ses).anime(
-                "tonikawa-over-the-moon-for-you-season-2-hindi-sub-01"
-            )
-        )
-    )
-    await ses.close()
+# async def main():
+#     ses = aiohttp.ClientSession()
+#     print(
+#         (
+#             await TPXAnime(ses).anime(
+#                 "tonikawa-over-the-moon-for-you-season-2-hindi-sub-01"
+#             )
+#         )
+#     )
+#     await ses.close()
 
 
-print(asyncio.run(main()))
+# print(asyncio.run(main()))
