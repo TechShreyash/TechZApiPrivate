@@ -40,7 +40,7 @@ class TPXAnime:
 
         for i in animes:
             id = i.find("a").get("href").split("/")[3]
-            img = i.find("img").get("srcset").strip()
+            img = (i.find("img").get("srcset") or i.find("img").get("data-srcset")).strip()
             imgs = {}
             for q in img.split(","):
                 x, y = q.strip().split(" ")
@@ -77,7 +77,7 @@ class TPXAnime:
         results = []
         for i in animes:
             id = i.find("a").get("href").split("/")[3]
-            img = i.find("img").get("srcset").strip()
+            img = (i.find("img").get("srcset") or i.find("img").get("data-srcset")).strip()
 
             imgs = {}
             for q in img.split(","):
