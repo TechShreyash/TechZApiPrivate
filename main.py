@@ -427,7 +427,7 @@ async def tpx_anime(api_key: str, id: str):
 
 @app.get("/tpx/bypass", name="tpx bypass", tags=["TPX Anime"])
 async def tpx_anime(api_key: str, url: str):
-    """Bypass url shortner and get anime info from TPX Anime (hindisub.in)
+    """Bypass url shortner of TPX Anime
 
     - url : Url to bypass, Ex : https://links.hindisub.com/redirect/main2.php?url=f41616t5k40314s2v44646s2r5p5m4q4i4l4c444s216l434b4m5l494p4v214l303f3p3p323o3n2x3m4v5q5o524p4f5r2v374q4q33414e3k3b3p2k4g4y2g5i4p5j4o5s4
 
