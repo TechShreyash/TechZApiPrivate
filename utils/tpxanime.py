@@ -5,6 +5,7 @@ import asyncio
 import aiohttp
 import json
 import base64
+import re
 
 
 LATEST_CACHE = {}
@@ -154,6 +155,12 @@ class TPXAnime:
         err = 0
         while err < 5:
             try:
+                async with self.session.get(url) as resp:
+                    html = await resp.text()
+
+                url = re.search(
+                    r".*?document\.location\.href\s*=\s*\'([^']+)\'", html
+                ).group(1)
                 bypassed = PyBypass.bypass(url)
                 return bypassed
             except Exception as e:
