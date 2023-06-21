@@ -111,7 +111,8 @@ class TPXAnime:
             )
 
         title = soup.find("h1", "entry-title").text
-        img = soup.find("div", "herald-post-thumbnail").find("img").get("srcset")
+        img = soup.find("div", "herald-post-thumbnail").find("img")
+        img = img.get("srcset") or img.get("data-srcset")
 
         imgs = {}
         for q in img.split(","):
