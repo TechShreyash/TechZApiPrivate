@@ -13,12 +13,13 @@ from fastapi.responses import FileResponse
 from fastapi.openapi.utils import get_openapi
 from utils.extra import download
 from utils.tpxanime import TPXAnime
+from utils.animeworldin import AnimeWorldIN
 import aiohttp
 
 app = FastAPI()
 
 session = []
-AIO_SESSIONS = 5
+AIO_SESSIONS = 1
 
 
 def get_session():
@@ -441,4 +442,106 @@ async def tpx_anime(api_key: str, url: str):
         return {"success": False, "error": str(e)}
 
     data = await TPXAnime(get_session()).bypass(url)
+    return {"success": True, "results": data}
+
+
+# Anime-World.in
+
+
+@app.get("/animeworldin/search", name="animeworldin search", tags=["AnimeWorldIN"])
+async def animeworldin_search(api_key: str, query: str):
+    """Search animes on anime-world.in
+
+    - query: Search query
+
+    Price: 1 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": False, "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 1)
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+    data = await AnimeWorldIN(get_session()).search(query)
+    return {"success": True, "results": data}
+
+
+@app.get("/animeworldin/anime", name="animeworldin anime", tags=["AnimeWorldIN"])
+async def animeworldin_anime(api_key: str, id: str):
+    """Get anime info from anime-world.in
+
+    - id : Anime id, Ex : doraemon
+
+    Price: 1 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": False, "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 1)
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+    data = await AnimeWorldIN(get_session()).anime(id)
+    return {"success": True, "results": data}
+
+
+@app.get(
+    "/animeworldin/get_episodes",
+    name="animeworldin get_episodes",
+    tags=["AnimeWorldIN"],
+)
+async def animeworldin_get_episodes(api_key: str, id: str):
+    """Get list of episodes from anime-world.in
+
+    - id : Anime id, Ex : doraemon
+
+    Price: 1 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": False, "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 1)
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+    data = await AnimeWorldIN(get_session()).get_episodes(id)
+    return {"success": True, "results": data}
+
+
+@app.get("/animeworldin/episode", name="animeworldin episode", tags=["AnimeWorldIN"])
+async def animeworldin_episode(api_key: str, id: str):
+    """Get episode embed links from anime-world.in
+
+    - id : Episode id, Ex : 3935
+
+    Price: 1 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": False, "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 1)
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+    data = await AnimeWorldIN(get_session()).episode(id)
+    return {"success": True, "results": data}
+
+
+@app.get("/animeworldin/stream", name="animeworldin stream", tags=["AnimeWorldIN"])
+async def animeworldin_stream(api_key: str, url: str):
+    """Get episode stream links (m3u8) from anime-world.in
+
+    - url : Episode url, Ex : https://awstream.net/watch?v=91Vzzmx2Ez
+
+    Price: 1 credits"""
+    if not await DB.is_user(api_key):
+        return {"success": False, "error": "Invalid api key"}
+
+    try:
+        await DB.reduce_credits(api_key, 1)
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+    data = await AnimeWorldIN(get_session()).stream(url)
     return {"success": True, "results": data}
