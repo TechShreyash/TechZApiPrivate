@@ -129,8 +129,7 @@ async def scrapper_task(loop):
             hash = task.get("hash")
 
             tasks[hash]["status"] = "processing"
-            logger.info(
-                f'Scrapping task : {task.get("hash")} {task.get("url")}')
+            logger.info(f'Scrapping task : {task.get("hash")} {task.get("url")}')
 
             try:
                 results = await loop.run_in_executor(
@@ -166,13 +165,8 @@ async def scrapper_task(loop):
 
 
 def getDriver() -> webdriver.Chrome:
-
     chrome_options = webdriver.ChromeOptions()
     # chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_experimental_option(
-        "excludeSwitches", ["enable-logging"])
     myDriver = webdriver.Chrome(
         service=Service(ChromeDriverManager().install()), options=chrome_options
     )
@@ -180,71 +174,47 @@ def getDriver() -> webdriver.Chrome:
     return myDriver
 
 
-def scrap_mkv(x):
-    wd, link, max, hash, api_key = x
-    r = requests.get(link)
-    soup = bs(r.content, "html.parser")
-
-    mealob = []
-    for i in soup.find_all("a"):
-        u = i.get("href")
-        if u:
-            u = str(u)
-            if u.startswith("https://ww3.mkvcinemas.lat?"):
-                mealob.append(u)
-
-    print('Found', len(mealob), 'links in', link)
-
+def scrap_mkv(i):
+    wd = getDriver()
 
     b1 = '//*[@id="soralink-human-verif-main"]'
     generater = '//*[@id="generater"]'
     showlink = '//*[@id="showlink"]'
+    cc = '//*[@id="recaptcha-anchor"]'
 
-    gdtot = []
+    i = i.replace("ww2.mkvcinemas.lat", "ww3.mkvcinemas.lat")
+    print("Scraping", i)
+    wd.get(i)
+    sleep(3)
+    WebDriverWait(wd, 10).until(ec.element_to_be_clickable((By.XPATH, b1))).click()
+    sleep(10)
+    WebDriverWait(wd, 10).until(
+        ec.element_to_be_clickable((By.XPATH, generater))
+    ).click()
+    sleep(2)
 
-    pos = 1
-    mealob = mealob[:max]
+    wd.find_element(By.CLASS_NAME, "recaptcha-checkbox").click()
+    sleep(5)
+    WebDriverWait(wd, 10).until(
+        ec.element_to_be_clickable((By.XPATH, showlink))
+    ).click()
+    IItab = wd.window_handles[1]
+    wd.close()
+    wd.switch_to.window(IItab)
+    title = (
+        wd.title.replace("GDToT", "")
+        .split("mkvCinemas")[0]
+        .rstrip("- ")
+        .lstrip(" |")
+        .strip()
+    )
+    size = wd.find_element(By.TAG_NAME, "tr").text.replace("File Size", "").strip()
+    info = {"title": title, "gdtot": wd.current_url, "size": size}
 
-    for i in mealob:
-        try:
-            i = i.replace('ww2.mkvcinemas.lat', 'ww3.mkvcinemas.lat')
-            print('Scraping', i)
-            wd.get(i)
-            sleep(3)
-            WebDriverWait(wd, 10).until(
-                ec.element_to_be_clickable((By.XPATH, b1))
-            ).click()
-            sleep(10)
-            WebDriverWait(wd, 10).until(
-                ec.element_to_be_clickable((By.XPATH, generater))
-            ).click()
-            sleep(5)
-            WebDriverWait(wd, 10).until(
-                ec.element_to_be_clickable((By.XPATH, showlink))
-            ).click()
-            IItab = wd.window_handles[1]
-            wd.close()
-            wd.switch_to.window(IItab)
-            title = (
-                wd.title.replace("GDToT", "")
-                .split("mkvCinemas")[0]
-                .rstrip("- ")
-                .lstrip(" |")
-                .strip()
-            )
-            size = wd.find_element(By.TAG_NAME, "tr").text.replace(
-                "File Size", "").strip()
-            info = {"title": title, "gdtot": wd.current_url, "size": size}
-            gdtot.append(info)
-            tasks[hash]["scrapped"] = f"{pos}/{len(mealob)}"
-            pos += 1
-        except Exception as e:
-            print(e)
-            pass
+    print(info)
+    sleep(60)
 
-    try:
-        users_queue.remove(api_key)
-    except:
-        pass
-    return gdtot
 
+scrap_mkv(
+    "https://mkvcinemas.bar/?a78422d8da=N0RRelhQb1hQcXY3cmdOZDFGRTR4Y0V1Z3hMTU1BaTYvRkIxYnV1SWFiVXNDSFNrb3F1UEdRZTR3NUVMZ3lhYmd5U3gwOElEaThUZkl2U3FmWkJ4T1VaeW1yNG5samIrWUJIOCt6ZzlGNGc9"
+)
